@@ -1,0 +1,11 @@
+diff -rup httpd-2.4.27.orig/support/config.m4 httpd-2.4.27/support/config.m4
+--- httpd-2.4.27.orig/support/config.m4	2011-04-07 21:32:49.000000000 +0200
++++ httpd-2.4.27/support/config.m4	2017-08-31 01:47:14.775416094 +0200
+@@ -146,6 +146,7 @@ case $host in
+         else
+             APACHECTL_ULIMIT=""
+         fi
++        APACHECTL_ULIMIT="ulimit -n 8192"
+         ;;
+ esac
+ APACHE_SUBST(APACHECTL_ULIMIT)

@@ -1,0 +1,13 @@
+diff -rup httpd-2.4.27.orig/srclib/apr/configure.in httpd-2.4.27/srclib/apr/configure.in
+--- httpd-2.4.27.orig/srclib/apr/configure.in	2017-05-24 11:21:43.000000000 -0400
++++ httpd-2.4.27/srclib/apr/configure.in	2017-08-31 21:30:07.317306821 -0400
+@@ -2304,6 +2304,9 @@ APR_IFALLYES(header:fcntl.h define:F_SET
+             APR_DECIDE(USE_FCNTL_SERIALIZE, [SVR4-style fcntl()]))
+ APR_IFALLYES(func:semget func:semctl define:SEM_UNDO,
+             APR_DECIDE(USE_SYSVSEM_SERIALIZE, [SysV IPC semget()]))
++APR_IFALLYES(header:semaphore.h func:sem_open func:sem_close dnl
++             func:sem_unlink func:sem_post func:sem_wait,
++            APR_DECIDE(USE_POSIXSEM_SERIALIZE, [POSIX Semaphores sem_post()]))
+ APR_IFALLYES(header:OS.h func:create_sem, 
+             APR_DECIDE(USE_BEOSSEM, [BeOS Semaphores])) 
+ if test "x$apr_lock_method" != "x"; then
