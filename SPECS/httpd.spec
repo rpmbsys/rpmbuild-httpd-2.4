@@ -18,11 +18,11 @@
 
 # https://github.com/rpm-software-management/rpm/blob/master/doc/manual/conditionalbuilds
 
-%global rpmrel 3
+%global rpmrel 1
 
 Summary: Apache HTTP Server
 Name: httpd
-Version: 2.4.29
+Version: 2.4.33
 Release: %{rpmrel}%{?dist}
 URL: https://httpd.apache.org/
 Source0: https://www.apache.org/dist/httpd/httpd-%{version}.tar.bz2
@@ -84,7 +84,7 @@ Patch31: httpd-2.4.18-sslmultiproxy.patch
 # CentOS 7
 Patch34: httpd-2.4.17-socket-activation.patch
 
-Patch35: httpd-2.4.17-sslciphdefault.patch
+Patch35: httpd-2.4.33-sslciphdefault.patch
 
 # ulimit to apachectl
 Patch41: httpd-2.4.27-apct2.patch
@@ -98,7 +98,9 @@ Patch44: httpd-2.4.27-sem.patch
 # Bug fixes
 
 # https://bugzilla.redhat.com/show_bug.cgi?id=1397243
-Patch58: httpd-2.4.25-r1738878.patch
+Patch58: httpd-2.4.33-r1738878.patch
+# https://bugzilla.redhat.com/show_bug.cgi?id=1564537
+Patch59: httpd-2.4.33-sslmerging.patch
 
 # Security fixes
 
@@ -245,7 +247,7 @@ mv apr-util-%{apuver} srclib/apr-util
 %endif
 
 %patch30 -p1 -b .cachehardmax
-%patch31 -p1 -b .sslmultiproxy
+#%patch31 -p1 -b .sslmultiproxy
 
 %if 0%{?rhel} >= 7
 %patch34 -p1 -b .socketactivation
@@ -259,6 +261,7 @@ mv apr-util-%{apuver} srclib/apr-util
 %patch44 -p1 -b .sem
 
 %patch58 -p1 -b .r1738878
+%patch59 -p1 -b .sslmerging
 
 # Patch in the vendor string
 sed -i '/^#define PLATFORM/s/Unix/%{vstring}/' os/unix/os.h
@@ -426,6 +429,7 @@ install -m 644 -p $RPM_SOURCE_DIR/httpd.tmpfiles \
 
 # Other directories
 mkdir -p $RPM_BUILD_ROOT%{_localstatedir}/lib/dav \
+         $RPM_BUILD_ROOT%{_localstatedir}/lib/httpd
 %if 0%{?rhel} >= 7
 mkdir -p $RPM_BUILD_ROOT/run/httpd/htcacheclean
 %else
@@ -502,6 +506,7 @@ ln -s ../../pixmaps/poweredby.png \
 
 # symlinks for /etc/httpd
 ln -s ../..%{_localstatedir}/log/httpd $RPM_BUILD_ROOT/etc/httpd/logs
+ln -s ../..%{_localstatedir}/lib/httpd $RPM_BUILD_ROOT/etc/httpd/state
 %if 0%{?rhel} >= 7
 ln -s /run/httpd $RPM_BUILD_ROOT/etc/httpd/run
 %else
@@ -624,6 +629,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %{_sysconfdir}/httpd/modules
 %{_sysconfdir}/httpd/logs
+%{_sysconfdir}/httpd/state
 %{_sysconfdir}/httpd/run
 %dir %{_sysconfdir}/httpd/conf
 %config(noreplace) %{_sysconfdir}/httpd/conf/httpd.conf
@@ -668,6 +674,7 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 %attr(0700,root,root) %dir %{_localstatedir}/log/httpd
 %attr(0700,apache,apache) %dir %{_localstatedir}/lib/dav
+%attr(0700,apache,apache) %dir %{_localstatedir}/lib/httpd
 %attr(0700,apache,apache) %dir %{_localstatedir}/cache/httpd
 %attr(0700,apache,apache) %dir %{_localstatedir}/cache/httpd/proxy
 %{_mandir}/man8/*
@@ -750,6 +757,9 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %changelog
+* Thu Apr 12 2018 Joe Orton <jorton@redhat.com> - 2.4.33-1
+- mod_ssl: drop implicit 'SSLEngine on' for vhost w/o certs (#1564537)
+
 * Fri Jan 05 2018 Alexander Ursu <alexander.ursu@gmail.com> - 2.4.29-3
 - fixed pid file location for CentOS 6
 - fixed default httpd.conf

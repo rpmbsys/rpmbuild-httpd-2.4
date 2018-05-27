@@ -1,0 +1,15 @@
+
+https://bugzilla.redhat.com/show_bug.cgi?id=1564537
+
+--- httpd-2.4.33/modules/ssl/ssl_engine_init.c.sslmerging
++++ httpd-2.4.33/modules/ssl/ssl_engine_init.c
+@@ -261,7 +261,8 @@
+          * the protocol is https. */
+         if (ap_get_server_protocol(s) 
+             && strcmp("https", ap_get_server_protocol(s)) == 0
+-            && sc->enabled == SSL_ENABLED_UNSET) {
++            && sc->enabled == SSL_ENABLED_UNSET
++            && (!apr_is_empty_array(sc->server->pks->cert_files))) {
+             sc->enabled = SSL_ENABLED_TRUE;
+         }
+ 
