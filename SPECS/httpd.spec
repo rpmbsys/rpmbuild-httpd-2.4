@@ -69,7 +69,7 @@ Patch6: httpd-2.4.3-apctl-systemd.patch
 Patch19: httpd-2.4.25-detect-systemd.patch
 
 # Features/functional changes
-Patch23: httpd-2.4.4-export.patch
+Patch23: httpd-2.4.33-export.patch
 Patch24: httpd-2.4.1-corelimit.patch
 Patch25: httpd-2.4.25-selinux.patch
 Patch26: httpd-2.4.4-r1337344+.patch
