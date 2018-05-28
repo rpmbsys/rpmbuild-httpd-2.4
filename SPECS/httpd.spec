@@ -757,7 +757,7 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %changelog
-* Thu Apr 12 2018 Joe Orton <jorton@redhat.com> - 2.4.33-1
+* Mon May 28 2018 Alexander Ursu <alexander.ursu@gmail.com> - 2.4.33-1
 - mod_ssl: drop implicit 'SSLEngine on' for vhost w/o certs (#1564537)
 
 * Fri Jan 05 2018 Alexander Ursu <alexander.ursu@gmail.com> - 2.4.29-3
