@@ -761,11 +761,10 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %changelog
-* Thu Apr 19 2018 Joe Orton <jorton@redhat.com> - 2.4.33-5
+* Tue Jul 10 2018 Alexander Ursu <alexander.ursu@gmail.com> - 2.4.33-5
 - add httpd@.service; update httpd.service(8) and add new stub
-
-* Mon Apr 16 2018 Joe Orton <jorton@redhat.com> - 2.4.33-4
 - mod_md: change hard-coded default MdStoreDir to state/md (#1563846)
+- updated APR and Apr-Util libraries
 
 * Mon May 28 2018 Alexander Ursu <alexander.ursu@gmail.com> - 2.4.33-1
 - mod_ssl: drop implicit 'SSLEngine on' for vhost w/o certs (#1564537)
