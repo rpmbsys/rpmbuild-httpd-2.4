@@ -1,9 +1,9 @@
 
-This directory holds Apache 2.0 module-specific configuration files;
+This directory holds configuration files for the Apache HTTP Server;
 any files in this directory which have the ".conf" extension will be
-processed as Apache configuration files.
+processed as httpd configuration files.  The directory is used in
+addition to the directory /etc/httpd/conf.modules.d/, which contains
+configuration files necessary to load modules.
 
-Files are processed in alphabetical order, so if using configuration
-directives which depend on, say, mod_perl being loaded, ensure that
-these are placed in a filename later in the sort order than "perl.conf".
+Files are processed in alphabetical order.
 
