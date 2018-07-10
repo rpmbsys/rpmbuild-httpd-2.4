@@ -11,14 +11,14 @@
 
 %global mpm prefork
 
-%define aprver 1.6.2
-%define apuver 1.6.0
+%define aprver 1.6.3
+%define apuver 1.6.1
 %define aprlibver 1
 %define apulibver 1
 
 # https://github.com/rpm-software-management/rpm/blob/master/doc/manual/conditionalbuilds
 
-%global rpmrel 1
+%global rpmrel 5
 
 Summary: Apache HTTP Server
 Name: httpd
@@ -56,6 +56,7 @@ Source31: README.confmod
 Source32: httpd.service.xml
 Source40: htcacheclean.service
 Source41: htcacheclean.sysconf
+Source44: httpd@.service
 
 # build/scripts patches
 Patch1: httpd-2.4.1-apctl.patch
@@ -69,6 +70,7 @@ Patch6: httpd-2.4.3-apctl-systemd.patch
 Patch19: httpd-2.4.25-detect-systemd.patch
 
 # Features/functional changes
+Patch21: httpd-2.4.33-mddefault.patch
 Patch23: httpd-2.4.33-export.patch
 Patch24: httpd-2.4.1-corelimit.patch
 Patch25: httpd-2.4.25-selinux.patch
@@ -79,7 +81,7 @@ Patch27: httpd-2.4.2-icons.patch
 Patch29: httpd-2.4.27-systemd.patch
 
 Patch30: httpd-2.4.4-cachehardmax.patch
-Patch31: httpd-2.4.18-sslmultiproxy.patch
+Patch31: httpd-2.4.33-sslmultiproxy.patch
 
 # CentOS 7
 Patch34: httpd-2.4.17-socket-activation.patch
@@ -236,6 +238,7 @@ mv apr-util-%{apuver} srclib/apr-util
 %patch19 -p1 -b .detectsystemd
 %endif
 
+%patch21 -p1 -b .mddefault
 %patch23 -p1 -b .export
 %patch24 -p1 -b .corelimit
 %patch25 -p1 -b .selinux
@@ -247,7 +250,7 @@ mv apr-util-%{apuver} srclib/apr-util
 %endif
 
 %patch30 -p1 -b .cachehardmax
-#%patch31 -p1 -b .sslmultiproxy
+%patch31 -p1 -b .sslmultiproxy
 
 %if 0%{?rhel} >= 7
 %patch34 -p1 -b .socketactivation
@@ -363,7 +366,7 @@ make DESTDIR=$RPM_BUILD_ROOT install
 %if 0%{?rhel} >= 7
 # Install systemd service files (CentOS 7)
 mkdir -p $RPM_BUILD_ROOT%{_unitdir}
-for s in httpd.service htcacheclean.service httpd.socket; do
+for s in httpd.service htcacheclean.service httpd.socket httpd@.service; do
   install -p -m 644 $RPM_SOURCE_DIR/${s} \
                     $RPM_BUILD_ROOT%{_unitdir}/${s}
 done
@@ -530,7 +533,7 @@ install -m 644 -p $RPM_SOURCE_DIR/httpd.logrotate \
 
 %if 0%{?rhel} >= 7
 # Install systemd service man pages (CentOS 7)
-install -m 644 -p httpd.service.8 httpd.socket.8 \
+install -m 644 -p httpd.service.8 httpd.socket.8 httpd@.service.8 \
     $RPM_BUILD_ROOT%{_mandir}/man8
 %endif
 
@@ -681,6 +684,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %if 0%{?rhel} >= 7
 %{_unitdir}/httpd.service
+%{_unitdir}/httpd@.service
 %{_unitdir}/htcacheclean.service
 %{_unitdir}/*.socket
 %else
@@ -757,6 +761,12 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %changelog
+* Thu Apr 19 2018 Joe Orton <jorton@redhat.com> - 2.4.33-5
+- add httpd@.service; update httpd.service(8) and add new stub
+
+* Mon Apr 16 2018 Joe Orton <jorton@redhat.com> - 2.4.33-4
+- mod_md: change hard-coded default MdStoreDir to state/md (#1563846)
+
 * Mon May 28 2018 Alexander Ursu <alexander.ursu@gmail.com> - 2.4.33-1
 - mod_ssl: drop implicit 'SSLEngine on' for vhost w/o certs (#1564537)
 
