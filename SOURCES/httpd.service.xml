@@ -4,7 +4,7 @@
 
 ]>
 <!--
- Copyright 2017 Red Hat, Inc.
+ Copyright 2018 Red Hat, Inc.
 
  Licensed to the Apache Software Foundation (ASF) under one or more
  contributor license agreements.  See the NOTICE file distributed with
@@ -36,6 +36,7 @@
   
   <refnamediv>
     <refname>httpd.service</refname>
+    <refname>httpd@.service</refname>
     <refname>httpd.socket</refname>
     <refpurpose>httpd unit files for systemd</refpurpose>
   </refnamediv>
@@ -43,6 +44,7 @@
   <refsynopsisdiv>
     <para>
       <filename>/usr/lib/systemd/system/httpd.service</filename>, 
+      <filename>/usr/lib/systemd/system/httpd@.service</filename>,
       <filename>/usr/lib/systemd/system/httpd.socket</filename>
     </para>
   </refsynopsisdiv>
@@ -80,8 +82,9 @@
       directly, since such changes would be lost over package
       upgrades. Running <command>systemctl edit
       httpd.service</command> or <command>systemctl edit
-      httpd.socket</command> as root will create a drop-in file in
-      <filename>/etc/systemd/system/httpd.service.d</filename> which
+      httpd.socket</command> as root will create a drop-in file (in
+      the former case, in
+      <filename>/etc/systemd/system/httpd.service.d</filename>) which
       over-rides the system defaults.</para>
 
       <para>For example, to set the <option>LD_LIBRARY_PATH</option>
@@ -143,6 +146,43 @@ Wants=network-online.target</programlisting>
       which terminates the server only once active connections have
       been processed.</para>
 
+      <para>To "ungracefully" stop the server without waiting for
+      requests to complete, use <command>systemctl kill
+      --kill-who=main httpd</command>; similarly to "ungracefully"
+      reload the configuration, use <command>systemctl kill
+      --kill-who=main --signal=HUP httpd</command>.</para>
+    </refsect2>
+
+    <refsect2>
+      <title>Automated service restarts</title>
+
+      <para>System packages (including the httpd package itself) may
+      restart the httpd service automatically after packages are
+      upgraded, installed, or removed. This is done using the
+      <command>systemctl reload httpd.service</command>, which
+      produces a <emphasis>graceful</emphasis> restart by default as
+      described above.</para>
+
+      <para>To suppress automatic reloads entirely, create the file
+      <filename>/etc/sysconfig/httpd-disable-posttrans</filename>.</para>
+    </refsect2>
+
+    <refsect2>
+      <title>Changing the default MPM (Multi-Processing Module)</title>
+
+      <para>httpd offers a choice of multi-processing modules (MPMs),
+      which can be configured in
+      <filename>/etc/httpd/conf.modules.d/00-mpm.conf</filename>.  The
+      default is to use the <emphasis>@MPM@</emphasis> MPM.</para>
+
+      <para>If using the <emphasis>prefork</emphasis> MPM, the
+      "httpd_graceful_shutdown" SELinux boolean should also be
+      enabled, since with this MPM, httpd needs to establish TCP
+      connections to local ports to successfully complete a graceful
+      restart or shutdown. This boolean can be enabled by running the
+      command: <command>semanage boolean -m --on
+      httpd_graceful_shutdown</command></para>
+
     </refsect2>
 
     <refsect2>
@@ -182,6 +222,73 @@ Wants=network-online.target</programlisting>
 
     </refsect2>
 
+    <refsect2>
+      <title>Socket activation</title>
+
+      <para>Socket activation (see
+      <citerefentry><refentrytitle>systemd.socket</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+      for more information) can be used with <command>httpd</command>
+      by enabling the <command>httpd.socket</command> unit.  The
+      <command>httpd</command> listener configuration must exactly
+      match the <literal>ListenStream</literal> options configured for
+      the <command>httpd.socket</command> unit.  The default
+      <command>httpd.socket</command> has a
+      <literal>ListenStream=80</literal> and, if mod_ssl is installed,
+      <literal>ListenStream=443</literal> by a drop-in file. If
+      additional <literal>Listen</literal> directives are added to the
+      httpd configuration, corresponding
+      <literal>ListenStream</literal> options should be added via
+      drop-in files, for example via <command>systemctl edit
+      httpd.socket</command>.</para>
+
+      <para>If using socket activation with httpd, only one listener
+      on any given TCP port is supported; a configuration with both
+      "<literal>Listen 127.0.0.1:80</literal>" and "<literal>Listen
+      192.168.1.2:80</literal>" will not work.</para>
+    </refsect2>
+
+    <refsect2>
+      <title>Instatiated services</title>
+
+      <para>The <command>httpd@.service</command> unit is an
+      instatiated template service. An instance of this unit will be
+      started using the configuration file
+      <filename>/etc/httpd/conf/INSTANCE.conf</filename>, where
+      <emphasis>INSTANCE</emphasis> is replaced with the instance
+      name.  For example, <command>systemctl start
+      httpd@foobar.service</command> will start httpd using the
+      configuration file
+      <filename>/etc/httpd/conf/foobar.conf</filename>.  The
+      <option>HTTPD_INSTANCE</option> environment variable is set to
+      the instance name by the unit and is available for use within
+      the configuration file.</para>
+
+      <para>To allow multiple instances of httpd to run
+      simultaneously, a number of configuration directives must be
+      changed, such as <command>PidFile</command> and
+      <command>DefaultRuntimeDir</command> to pick non-conflicting
+      paths, and <command>Listen</command> to choose different ports.
+      The example configuration file
+      <filename>/usr/share/doc/httpd/instance.conf</filename>
+      demonstrates how to make such changes using
+      <option>HTTPD_INSTANCE</option> variable.</para>
+
+      <para>It can be useful to configure instances of
+      <command>httpd@.service</command> to reload when
+      <command>httpd.service</command> is reloaded; for example,
+      <command>logrotate</command> will reload only
+      <command>httpd.service</command> when logs are rotated. If this
+      behaviour is required, create a drop-in file for the instance as
+      follows:
+
+      <programlisting>[Unit]
+ReloadPropagatedFrom=httpd.service</programlisting>
+
+      As with normal units, drop-in files for instances can be created
+      using <command>systemctl edit</command>, e.g. <command>systemctl edit
+      httpd@foobar.service</command>.</para>
+    </refsect2>
+
   </refsect1>
 
   <refsect1>
@@ -189,6 +296,7 @@ Wants=network-online.target</programlisting>
 
     <para><filename>/usr/lib/systemd/system/httpd.service</filename>,
     <filename>/usr/lib/systemd/system/httpd.socket</filename>,
+    <filename>/usr/lib/systemd/system/httpd@.service</filename>,
     <filename>/etc/systemd/systemd/httpd.service.d</filename></para>
   </refsect1>
   
@@ -201,6 +309,7 @@ Wants=network-online.target</programlisting>
     <citerefentry><refentrytitle>systemctl</refentrytitle><manvolnum>1</manvolnum></citerefentry>, 
     <citerefentry><refentrytitle>systemd.service</refentrytitle><manvolnum>5</manvolnum></citerefentry>,
     <citerefentry><refentrytitle>systemd.exec</refentrytitle><manvolnum>5</manvolnum></citerefentry>,
+    <citerefentry><refentrytitle>systemd.socket</refentrytitle><manvolnum>5</manvolnum></citerefentry>,
     <citerefentry><refentrytitle>httpd_selinux</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
     <citerefentry><refentrytitle>semanage</refentrytitle><manvolnum>8</manvolnum></citerefentry>
     </para>
