@@ -1,4 +1,4 @@
-FROM aursu/ap24build:7-base
+FROM aursu/ap24build:6-base
 
 COPY SOURCES ${BUILD_TOPDIR}/SOURCES
 COPY SPECS ${BUILD_TOPDIR}/SPECS
