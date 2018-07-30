@@ -3,7 +3,7 @@ services:
   centos6ap24base:
     build:
       context: .
-      dockerfile: Dockerfile.el6-base
+      dockerfile: Dockerfile.6-base
     image: aursu/ap24build:6-base
   centos6ap24build:
     volumes:
