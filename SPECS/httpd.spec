@@ -18,18 +18,18 @@
 
 # https://github.com/rpm-software-management/rpm/blob/master/doc/manual/conditionalbuilds
 
-%global rpmrel 5
+%global rpmrel 3
 
 Summary: Apache HTTP Server
 Name: httpd
-Version: 2.4.33
+Version: 2.4.34
 Release: %{rpmrel}%{?dist}
 URL: https://httpd.apache.org/
 Source0: https://www.apache.org/dist/httpd/httpd-%{version}.tar.bz2
 Source1: https://www.apache.org/dist/apr/apr-%{aprver}.tar.bz2
 Source2: https://www.apache.org/dist/apr/apr-util-%{apuver}.tar.bz2
 Source8: index.html
-Source9: httpd.logrotate
+Source9: server-status.conf
 Source10: httpd.sysconf
 
 # CentOS 7
@@ -47,6 +47,7 @@ Source24: 05-ssl.conf
 # CentOS 7
 Source25: 10-listen443.conf
 Source26: httpd.socket
+Source29: httpd.logrotate
 
 # Documentation
 Source30: README.confd
@@ -62,7 +63,6 @@ Source44: httpd@.service
 Patch1: httpd-2.4.1-apctl.patch
 Patch2: httpd-2.4.9-apxs.patch
 Patch3: httpd-2.4.1-deplibs.patch
-Patch5: httpd-2.4.3-layout.patch
 
 # CentOS 7
 Patch6: httpd-2.4.3-apctl-systemd.patch
@@ -78,7 +78,7 @@ Patch26: httpd-2.4.4-r1337344+.patch
 Patch27: httpd-2.4.2-icons.patch
 
 # CentOS 7
-Patch29: httpd-2.4.27-systemd.patch
+Patch29: httpd-2.4.33-systemd.patch
 
 Patch30: httpd-2.4.4-cachehardmax.patch
 Patch31: httpd-2.4.33-sslmultiproxy.patch
@@ -87,6 +87,7 @@ Patch31: httpd-2.4.33-sslmultiproxy.patch
 Patch34: httpd-2.4.17-socket-activation.patch
 
 Patch35: httpd-2.4.33-sslciphdefault.patch
+Patch36: httpd-2.4.33-r1830819+.patch
 
 # ulimit to apachectl
 Patch41: httpd-2.4.27-apct2.patch
@@ -98,11 +99,9 @@ Patch43: httpd-2.4.27-apr.patch
 Patch44: httpd-2.4.27-sem.patch
 
 # Bug fixes
-
 # https://bugzilla.redhat.com/show_bug.cgi?id=1397243
-Patch58: httpd-2.4.33-r1738878.patch
-# https://bugzilla.redhat.com/show_bug.cgi?id=1564537
-Patch59: httpd-2.4.33-sslmerging.patch
+Patch58: httpd-2.4.34-r1738878.patch
+Patch59: httpd-2.4.34-r1555631.patch
 
 # Security fixes
 
@@ -231,7 +230,6 @@ mv apr-util-%{apuver} srclib/apr-util
 %patch1 -p1 -b .apctl
 %patch2 -p1 -b .apxs
 %patch3 -p1 -b .deplibs
-%patch5 -p1 -b .layout
 
 %if 0%{?rhel} >= 7
 %patch6 -p1 -b .apctlsystemd
@@ -242,7 +240,7 @@ mv apr-util-%{apuver} srclib/apr-util
 %patch23 -p1 -b .export
 %patch24 -p1 -b .corelimit
 %patch25 -p1 -b .selinux
-%patch26 -p1 -b .r1337344+
+#%patch26 -p1 -b .r1337344+
 %patch27 -p1 -b .icons
 
 %if 0%{?rhel} >= 7
@@ -250,13 +248,14 @@ mv apr-util-%{apuver} srclib/apr-util
 %endif
 
 %patch30 -p1 -b .cachehardmax
-%patch31 -p1 -b .sslmultiproxy
+#%patch31 -p1 -b .sslmultiproxy
 
 %if 0%{?rhel} >= 7
 %patch34 -p1 -b .socketactivation
 %endif
 
 %patch35 -p1 -b .sslciphdefault
+%patch36 -p1 -b .r1830819+
 
 %patch41 -p1 -b .apct2
 %patch42 -p1 -b .static
@@ -264,10 +263,12 @@ mv apr-util-%{apuver} srclib/apr-util
 %patch44 -p1 -b .sem
 
 %patch58 -p1 -b .r1738878
-%patch59 -p1 -b .sslmerging
+%patch59 -p1 -b .r1555631
 
 # Patch in the vendor string
 sed -i '/^#define PLATFORM/s/Unix/%{vstring}/' os/unix/os.h
+
+cp -p $RPM_SOURCE_DIR/server-status.conf server-status.conf
 
 # Safety check: prevent build if defined MMN does not equal upstream MMN.
 vmmn=`echo MODULE_MAGIC_NUMBER_MAJOR | cpp -include include/ap_mmn.h | sed -n '/^2/p'`
@@ -341,6 +342,7 @@ export LYNX_PATH=/usr/bin/links
         --enable-proxy-ajp=no \
         --enable-proxy-balancer=no \
         --enable-proxy-express=no \
+        --enable-proxy-uwsgi=no \
     --enable-asis \
     --enable-cgi \
     --enable-vhost-alias \
@@ -479,9 +481,12 @@ install -m 644 -c macros.httpd \
 
 
 # Handle contentdir
-mkdir $RPM_BUILD_ROOT%{contentdir}/noindex
+mkdir $RPM_BUILD_ROOT%{contentdir}/noindex \
+      $RPM_BUILD_ROOT%{contentdir}/server-status
 install -m 644 -p $RPM_SOURCE_DIR/index.html \
         $RPM_BUILD_ROOT%{contentdir}/noindex/index.html
+install -m 644 -p docs/server-status/* \
+        $RPM_BUILD_ROOT%{contentdir}/server-status
 rm -rf $RPM_BUILD_ROOT%{contentdir}/htdocs
 
 # remove manual sources
@@ -618,7 +623,7 @@ fi
 %posttrans
 %if 0%{?rhel} >= 7
 test -f /etc/sysconfig/httpd-disable-posttrans || \
-    /bin/systemctl try-restart httpd.service htcacheclean.service >/dev/null 2>&1 || :
+    /bin/systemctl try-restart --no-block httpd.service htcacheclean.service >/dev/null 2>&1 || :
 %endif
 
 %clean
@@ -629,6 +634,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %doc ABOUT_APACHE README CHANGES LICENSE VERSIONING NOTICE
 %doc docs/conf/extra/*.conf
+%doc server-status.conf
 
 %{_sysconfdir}/httpd/modules
 %{_sysconfdir}/httpd/logs
@@ -663,11 +669,13 @@ rm -rf $RPM_BUILD_ROOT
 %dir %{contentdir}/error
 %dir %{contentdir}/error/include
 %dir %{contentdir}/noindex
+%dir %{contentdir}/server-status
 %{contentdir}/icons/*
 %{contentdir}/error/README
 %{contentdir}/error/*.var
 %{contentdir}/error/include/*.html
 %{contentdir}/noindex/index.html
+%{contentdir}/server-status/*
 %if 0%{?rhel} >= 7
 %attr(0710,root,apache) %dir /run/httpd
 %attr(0700,apache,apache) %dir /run/httpd/htcacheclean
@@ -761,6 +769,16 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %changelog
+* Fri Jul 20 2018 Joe Orton <jorton@redhat.com> - 2.4.34-3
+- mod_ssl: fix OCSP regression (upstream r1555631)
+
+* Wed Jul 18 2018 Joe Orton <jorton@redhat.com> - 2.4.34-1
+- update to 2.4.34 (#1601160)
+
+* Mon Jul 16 2018 Joe Orton <jorton@redhat.com> - 2.4.33-10
+- don't block on service try-restart in posttrans scriptlet
+- add Lua-based /server-status example page to docs
+
 * Tue Jul 10 2018 Alexander Ursu <alexander.ursu@gmail.com> - 2.4.33-5
 - add httpd@.service; update httpd.service(8) and add new stub
 - mod_md: change hard-coded default MdStoreDir to state/md (#1563846)

@@ -108,10 +108,10 @@ Environment=LD_LIBRARY_PATH=/opt/vendor/lib</programlisting></para>
 
       <para>If httpd is configured to depend on any specific IP
       address (for example, with a "Listen" directive) which may only
-      become available during startup, or if httpd depends on other
+      become available during start-up, or if httpd depends on other
       services (such as a database daemon), the service
       <emphasis>must</emphasis> be configured to ensure correct
-      startup ordering.</para>
+      start-up ordering.</para>
 
       <para>For example, to ensure httpd is only running after all
       configured network interfaces are configured, create a drop-in
@@ -123,7 +123,7 @@ Wants=network-online.target</programlisting>
 
       See <ulink
       url="https://www.freedesktop.org/wiki/Software/systemd/NetworkTarget/"/>
-      for more information on startup ordering with systemd.</para>
+      for more information on start-up ordering with systemd.</para>
 
     </refsect2>
 
@@ -248,10 +248,10 @@ Wants=network-online.target</programlisting>
     </refsect2>
 
     <refsect2>
-      <title>Instatiated services</title>
+      <title>Instantiated services</title>
 
       <para>The <command>httpd@.service</command> unit is an
-      instatiated template service. An instance of this unit will be
+      instantiated template service. An instance of this unit will be
       started using the configuration file
       <filename>/etc/httpd/conf/INSTANCE.conf</filename>, where
       <emphasis>INSTANCE</emphasis> is replaced with the instance
@@ -316,3 +316,6 @@ ReloadPropagatedFrom=httpd.service</programlisting>
   </refsect1>
 
 </refentry>
+
+<!-- LocalWords:  systemd PidFile
+-->
