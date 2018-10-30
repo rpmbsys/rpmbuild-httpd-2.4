@@ -18,11 +18,11 @@
 
 # https://github.com/rpm-software-management/rpm/blob/master/doc/manual/conditionalbuilds
 
-%global rpmrel 3
+%global rpmrel 1
 
 Summary: Apache HTTP Server
 Name: httpd
-Version: 2.4.34
+Version: 2.4.37
 Release: %{rpmrel}%{?dist}
 URL: https://httpd.apache.org/
 Source0: https://www.apache.org/dist/httpd/httpd-%{version}.tar.bz2
@@ -65,7 +65,7 @@ Patch2: httpd-2.4.9-apxs.patch
 Patch3: httpd-2.4.1-deplibs.patch
 
 # CentOS 7
-Patch6: httpd-2.4.3-apctl-systemd.patch
+Patch6: httpd-2.4.34-apctlsystemd.patch
 # Needed for socket activation and mod_systemd patch
 Patch19: httpd-2.4.25-detect-systemd.patch
 
@@ -86,8 +86,9 @@ Patch31: httpd-2.4.33-sslmultiproxy.patch
 # CentOS 7
 Patch34: httpd-2.4.17-socket-activation.patch
 
-Patch35: httpd-2.4.33-sslciphdefault.patch
+Patch35: httpd-2.4.34-sslciphdefault.patch
 Patch36: httpd-2.4.33-r1830819+.patch
+Patch39: httpd-2.4.34-sslprotdefault.patch
 
 # ulimit to apachectl
 Patch41: httpd-2.4.27-apct2.patch
@@ -101,7 +102,7 @@ Patch44: httpd-2.4.27-sem.patch
 # Bug fixes
 # https://bugzilla.redhat.com/show_bug.cgi?id=1397243
 Patch58: httpd-2.4.34-r1738878.patch
-Patch59: httpd-2.4.34-r1555631.patch
+Patch60: httpd-2.4.34-enable-sslv3.patch
 
 # Security fixes
 
@@ -256,6 +257,7 @@ mv apr-util-%{apuver} srclib/apr-util
 
 %patch35 -p1 -b .sslciphdefault
 %patch36 -p1 -b .r1830819+
+%patch39 -p1 -b .sslprotdefault
 
 %patch41 -p1 -b .apct2
 %patch42 -p1 -b .static
@@ -263,7 +265,7 @@ mv apr-util-%{apuver} srclib/apr-util
 %patch44 -p1 -b .sem
 
 %patch58 -p1 -b .r1738878
-%patch59 -p1 -b .r1555631
+%patch60 -p1 -b .enable-sslv3
 
 # Patch in the vendor string
 sed -i '/^#define PLATFORM/s/Unix/%{vstring}/' os/unix/os.h
@@ -769,6 +771,9 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %changelog
+* Tue Oct 30 2018 Alexander Ursu <alexander.ursu@gmail.com> - 2.4.37-1
+- update to 2.4.37
+
 * Fri Jul 20 2018 Joe Orton <jorton@redhat.com> - 2.4.34-3
 - mod_ssl: fix OCSP regression (upstream r1555631)
 

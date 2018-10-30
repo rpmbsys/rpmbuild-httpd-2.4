@@ -1,0 +1,63 @@
+
+Make apachectl run via systemctl.
+
+Note: "apachectl graceful" is documented to start httpd if not running.
+
+Upstream-Status: vendor specific patch
+
+--- httpd-2.4.34/support/apachectl.in.apctlsystemd
++++ httpd-2.4.34/support/apachectl.in
+@@ -58,11 +58,6 @@
+ # have one, then status and fullstatus will not work.
+ STATUSURL="http://localhost:@PORT@/server-status"
+ 
+-# Source /etc/sysconfig/httpd for $HTTPD setting, etc.
+-if [ -r /etc/sysconfig/httpd ]; then
+-   . /etc/sysconfig/httpd
+-fi
+-
+ #
+ # Set this variable to a command that increases the maximum
+ # number of file descriptors allowed per child process. This is
+@@ -100,9 +95,28 @@
+ ERROR=$?
+ }
+ 
++if [ "x$2" != "x" ] ; then
++    echo Passing arguments to httpd using apachectl is no longer supported.
++    echo You can only start/stop/restart httpd using this script.
++    echo To pass extra arguments to httpd, see the httpd.service(8)
++    echo man page.
++fi
++
+ case $ACMD in
+-start|stop|restart|graceful|graceful-stop)
+-    $HTTPD $OPTIONS -k $ARGV
++start|stop|restart|status)
++    /usr/bin/systemctl $ACMD httpd.service
++    ERROR=$?
++    ;;
++graceful)
++    if /usr/bin/systemctl -q is-active httpd.service; then
++        /usr/bin/systemctl reload httpd.service
++    else
++        /usr/bin/systemctl start httpd.service
++    fi
++    ERROR=$?
++    ;;
++graceful-stop)
++    /usr/bin/systemctl stop httpd.service
+     ERROR=$?
+     ;;
+ startssl|sslstart|start-SSL)
+@@ -114,10 +128,6 @@
+ configtest)
+     testconfig
+     ;;
+-status)
+-    checklynx
+-    $LYNX $STATUSURL | awk ' /process$/ { print; exit } { print } '
+-    ;;
+ fullstatus)
+     checklynx
+     $LYNX $STATUSURL
