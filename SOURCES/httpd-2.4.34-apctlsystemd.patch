@@ -26,7 +26,7 @@ Upstream-Status: vendor specific patch
 +if [ "x$2" != "x" ] ; then
 +    echo Passing arguments to httpd using apachectl is no longer supported.
 +    echo You can only start/stop/restart httpd using this script.
-+    echo To pass extra arguments to httpd, see the httpd.service(8)
++    echo "To pass extra arguments to httpd, see the httpd.service(8)"
 +    echo man page.
 +fi
 +

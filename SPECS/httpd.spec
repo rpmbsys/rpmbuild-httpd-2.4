@@ -18,7 +18,7 @@
 
 # https://github.com/rpm-software-management/rpm/blob/master/doc/manual/conditionalbuilds
 
-%global rpmrel 1
+%global rpmrel 5
 
 Summary: Apache HTTP Server
 Name: httpd
@@ -55,6 +55,8 @@ Source31: README.confmod
 
 # CentOS 7
 Source32: httpd.service.xml
+Source33: htcacheclean.service.xml
+Source34: httpd.conf.xml
 Source40: htcacheclean.service
 Source41: htcacheclean.sysconf
 Source44: httpd@.service
@@ -70,7 +72,7 @@ Patch6: httpd-2.4.34-apctlsystemd.patch
 Patch19: httpd-2.4.25-detect-systemd.patch
 
 # Features/functional changes
-Patch21: httpd-2.4.33-mddefault.patch
+Patch21: httpd-2.4.37-r1842929+.patch
 Patch23: httpd-2.4.33-export.patch
 Patch24: httpd-2.4.1-corelimit.patch
 Patch25: httpd-2.4.25-selinux.patch
@@ -86,9 +88,9 @@ Patch31: httpd-2.4.33-sslmultiproxy.patch
 # CentOS 7
 Patch34: httpd-2.4.17-socket-activation.patch
 
-Patch35: httpd-2.4.34-sslciphdefault.patch
 Patch36: httpd-2.4.33-r1830819+.patch
-Patch39: httpd-2.4.34-sslprotdefault.patch
+Patch38: httpd-2.4.34-sslciphdefault.patch
+Patch39: httpd-2.4.37-sslprotdefault.patch
 
 # ulimit to apachectl
 Patch41: httpd-2.4.27-apct2.patch
@@ -237,7 +239,7 @@ mv apr-util-%{apuver} srclib/apr-util
 %patch19 -p1 -b .detectsystemd
 %endif
 
-%patch21 -p1 -b .mddefault
+%patch21 -p1 -b .r1842929+
 %patch23 -p1 -b .export
 %patch24 -p1 -b .corelimit
 %patch25 -p1 -b .selinux
@@ -255,8 +257,8 @@ mv apr-util-%{apuver} srclib/apr-util
 %patch34 -p1 -b .socketactivation
 %endif
 
-%patch35 -p1 -b .sslciphdefault
 %patch36 -p1 -b .r1830819+
+%patch38 -p1 -b .sslciphdefault
 %patch39 -p1 -b .sslprotdefault
 
 %patch41 -p1 -b .apct2
@@ -280,11 +282,17 @@ if test "x${vmmn}" != "x%{mmn}"; then
    exit 1
 fi
 
-%if 0%{?rhel} >= 7
-sed 's/@MPM@/%{mpm}/' < $RPM_SOURCE_DIR/httpd.service.xml \
-    > httpd.service.xml
+sed '
+s,@MPM@,%{mpm},g
+s,@DOCROOT@,%{docroot},g
+s,@LOGDIR@,%{_localstatedir}/log/httpd,g
+' < $RPM_SOURCE_DIR/httpd.conf.xml \
+    > httpd.conf.xml
 
-xmlto man ./httpd.service.xml
+xmlto man ./httpd.conf.xml
+%if 0%{?rhel} >= 7
+xmlto man $RPM_SOURCE_DIR/htcacheclean.service.xml
+xmlto man $RPM_SOURCE_DIR/httpd.service.xml
 %endif
 
 : Building with MMN %{mmn}, MMN-ISA %{mmnisa} and vendor string '%{vstring}'
@@ -541,8 +549,14 @@ install -m 644 -p $RPM_SOURCE_DIR/httpd.logrotate \
 %if 0%{?rhel} >= 7
 # Install systemd service man pages (CentOS 7)
 install -m 644 -p httpd.service.8 httpd.socket.8 httpd@.service.8 \
+    htcacheclean.service.8 \
     $RPM_BUILD_ROOT%{_mandir}/man8
 %endif
+
+# Install man pages
+install -d $RPM_BUILD_ROOT%{_mandir}/man5
+install -m 644 -p httpd.conf.5 \
+    $RPM_BUILD_ROOT%{_mandir}/man5
 
 # fix man page paths
 sed -e "s|/usr/local/apache2/conf/httpd.conf|/etc/httpd/conf/httpd.conf|" \
@@ -691,6 +705,7 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0700,apache,apache) %dir %{_localstatedir}/cache/httpd
 %attr(0700,apache,apache) %dir %{_localstatedir}/cache/httpd/proxy
 %{_mandir}/man8/*
+%{_mandir}/man5/*
 
 %if 0%{?rhel} >= 7
 %{_unitdir}/httpd.service
@@ -771,8 +786,49 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %changelog
-* Tue Oct 30 2018 Alexander Ursu <alexander.ursu@gmail.com> - 2.4.37-1
+* Fri Nov 23 2018 Lubos Uhliarik <luhliari@redhat.com> - 2.4.37-5
+- Resolves: #1652678 - TLS connection allowed while all protocols are forbidden
+
+* Thu Nov  8 2018 Joe Orton <jorton@redhat.com> - 2.4.37-4
+- add httpd.conf(5) (#1611361)
+
+* Wed Nov 07 2018 Luboš Uhliarik <luhliari@redhat.com> - 2.4.37-3
+- Resolves: #1647241 - fix apachectl script
+
+* Wed Oct 31 2018 Joe Orton <jorton@redhat.com> - 2.4.37-2
+- add DefaultStateDir/ap_state_dir_relative()
+- mod_dav_fs: use state dir for default DAVLockDB
+- mod_md: use state dir for default MDStoreDir
+
+* Wed Oct 31 2018 Joe Orton <jorton@redhat.com> - 2.4.37-1
 - update to 2.4.37
+
+* Wed Oct 31 2018 Joe Orton <jorton@redhat.com> - 2.4.34-11
+- add htcacheclean.service(8) man page
+
+* Fri Sep 28 2018 Joe Orton <jorton@redhat.com> - 2.4.34-10
+- apachectl: don't read /etc/sysconfig/httpd
+
+* Tue Sep 25 2018 Joe Orton <jorton@redhat.com> - 2.4.34-9
+- fix build if OpenSSL built w/o SSLv3 support
+
+* Fri Sep 21 2018 Joe Orton <jorton@redhat.com> - 2.4.34-8
+- comment-out SSLProtocol, SSLProxyProtocol from ssl.conf in
+  default configuration; now follow OpenSSL system default (#1468322)
+
+* Fri Sep 21 2018 Joe Orton <jorton@redhat.com> - 2.4.34-7
+- mod_ssl: follow OpenSSL protocol defaults if SSLProtocol
+  is not configured (Rob Crittenden, #1618371)
+
+* Tue Aug 28 2018 Luboš Uhliarik <luhliari@redhat.com> - 2.4.34-6
+- mod_ssl: enable SSLv3 and change behavior of "SSLProtocol All"
+  configuration (#1624777)
+
+* Tue Aug 21 2018 Joe Orton <jorton@redhat.com> - 2.4.34-5
+- mod_ssl: further TLSv1.3 fix (#1619389)
+
+* Mon Aug 13 2018 Joe Orton <jorton@redhat.com> - 2.4.34-4
+- mod_ssl: backport TLSv1.3 support changes from upstream (#1615059)
 
 * Fri Jul 20 2018 Joe Orton <jorton@redhat.com> - 2.4.34-3
 - mod_ssl: fix OCSP regression (upstream r1555631)

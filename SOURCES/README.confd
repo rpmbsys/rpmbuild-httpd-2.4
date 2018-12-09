@@ -5,5 +5,5 @@ processed as httpd configuration files.  The directory is used in
 addition to the directory /etc/httpd/conf.modules.d/, which contains
 configuration files necessary to load modules.
 
-Files are processed in alphabetical order.
-
+Files are processed in sorted order.  See httpd.conf(5) for more
+information.

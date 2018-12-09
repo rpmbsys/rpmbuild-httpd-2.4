@@ -6,4 +6,5 @@ configuration fragments necessary only to load modules.
 Administrators should use the directory "/etc/httpd/conf.d" to modify
 the configuration of httpd, or any modules.
 
-Files are processed in alphanumeric order.
+Files are processed in sorted order and should have a two digit
+numeric prefix.  See httpd.conf(5) for more information.
