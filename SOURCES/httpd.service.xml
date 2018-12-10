@@ -181,7 +181,7 @@ Wants=network-online.target</programlisting>
       connections to local ports to successfully complete a graceful
       restart or shutdown. This boolean can be enabled by running the
       command: <command>semanage boolean -m --on
-      httpd_graceful_shutdown</command></para>
+      httpd_graceful_shutdown</command>
 
       See
       <citerefentry><refentrytitle>httpd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>

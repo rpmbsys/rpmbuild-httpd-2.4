@@ -18,7 +18,7 @@
 
 # https://github.com/rpm-software-management/rpm/blob/master/doc/manual/conditionalbuilds
 
-%global rpmrel 5
+%global rpmrel 6
 
 Summary: Apache HTTP Server
 Name: httpd
@@ -365,6 +365,9 @@ export LYNX_PATH=/usr/bin/links
     --enable-remoteip \
     --enable-socache-shmcb \
     --enable-ssl=shared \
+%if 0%{?rhel} >= 7
+    --enable-systemd=static \
+%endif
     --disable-reqtimeout \
     --disable-status
 
@@ -786,6 +789,9 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %changelog
+* Mon Dec 10 2018 Alexander Ursu <alexander.ursu@gmail.com> - 2.4.37-6
+- added mod_systemd into CentOS 7 build
+
 * Fri Nov 23 2018 Lubos Uhliarik <luhliari@redhat.com> - 2.4.37-5
 - Resolves: #1652678 - TLS connection allowed while all protocols are forbidden
 
