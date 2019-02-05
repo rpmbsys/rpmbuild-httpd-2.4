@@ -18,11 +18,11 @@
 
 # https://github.com/rpm-software-management/rpm/blob/master/doc/manual/conditionalbuilds
 
-%global rpmrel 6
+%global rpmrel 2
 
 Summary: Apache HTTP Server
 Name: httpd
-Version: 2.4.37
+Version: 2.4.38
 Release: %{rpmrel}%{?dist}
 URL: https://httpd.apache.org/
 Source0: https://www.apache.org/dist/httpd/httpd-%{version}.tar.bz2
@@ -88,7 +88,7 @@ Patch31: httpd-2.4.33-sslmultiproxy.patch
 # CentOS 7
 Patch34: httpd-2.4.17-socket-activation.patch
 
-Patch36: httpd-2.4.33-r1830819+.patch
+Patch36: httpd-2.4.38-r1830819+.patch
 Patch38: httpd-2.4.34-sslciphdefault.patch
 Patch39: httpd-2.4.37-sslprotdefault.patch
 
@@ -789,6 +789,9 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %changelog
+* Wed Jan 23 2019 Lubos Uhliarik <luhliari@redhat.com> - 2.4.38-2
+- new version 2.4.38 (#1668125)
+
 * Mon Dec 10 2018 Alexander Ursu <alexander.ursu@gmail.com> - 2.4.37-6
 - added mod_systemd into CentOS 7 build
 
