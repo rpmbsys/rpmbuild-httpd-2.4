@@ -1,10 +1,5 @@
 version: "3.4"
 services:
-  centos6ap24base:
-    build:
-      context: .
-      dockerfile: Dockerfile.6-base
-    image: aursu/ap24build:6-base
   centos6ap24build:
     volumes:
       - rpms:/home/centos/rpmbuild/SRPMS
@@ -12,19 +7,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.el6
-    image: aursu/ap24build:el6
-  centos7ap24base:
-    build:
-      context: .
-      dockerfile: Dockerfile.base
-    image: aursu/ap24build:7-base
   centos7ap24build:
     volumes:
       - rpms:/home/centos/rpmbuild/SRPMS
       - rpm7:/home/centos/rpmbuild/RPMS
     build:
       context: .
-    image: aursu/ap24build:el7
 
 volumes:
   rpms:
