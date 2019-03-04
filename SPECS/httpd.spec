@@ -18,7 +18,7 @@
 
 # https://github.com/rpm-software-management/rpm/blob/master/doc/manual/conditionalbuilds
 
-%global rpmrel 3
+%global rpmrel 4
 
 Summary: Apache HTTP Server
 Name: httpd
@@ -594,9 +594,9 @@ rm -vf \
 rm -rf $RPM_BUILD_ROOT/etc/httpd/conf/{original,extra}
 
 %pre filesystem
-getent group apache >/dev/null || groupadd -g 48 -r apache
+getent group apache >/dev/null || groupadd -g 48 -o -r apache
 getent passwd apache >/dev/null || \
-  useradd -r -u 48 -g apache -s /sbin/nologin \
+  useradd -r -o -u 48 -g apache -s /sbin/nologin \
     -d %{contentdir} -c "Apache" apache
 
 %post
@@ -785,7 +785,7 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %changelog
-* Mon Mar  4 2019 Alexander Ursu <alexander.ursu@gmail.com> - 2.4.38-3
+* Mon Mar  4 2019 Alexander Ursu <alexander.ursu@gmail.com> - 2.4.38-4
 - switched back to user-group apache/apache
 
 * Wed Jan 23 2019 Lubos Uhliarik <luhliari@redhat.com> - 2.4.38-2
