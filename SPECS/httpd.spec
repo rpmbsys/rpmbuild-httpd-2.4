@@ -11,7 +11,7 @@
 
 %global mpm prefork
 
-%define aprver 1.6.3
+%define aprver 1.6.5
 %define apuver 1.6.1
 %define aprlibver 1
 %define apulibver 1
@@ -789,8 +789,8 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %changelog
-* Thu Apr 04 2019 Alexander Ursu <alexander.ursu@gmail.com> - 2.4.39-2
-- return back Patch1 (CentOS 6 support)
+* Thu Apr 04 2019 Alexander Ursu <alexander.ursu@gmail.com> - 2.4.39-3
+- upgrade APR to version 1.6.5
 
 * Tue Apr 02 2019 Lubos Uhliarik <luhliari@redhat.com> - 2.4.39-1
 - update to 2.4.39
