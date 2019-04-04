@@ -18,11 +18,11 @@
 
 # https://github.com/rpm-software-management/rpm/blob/master/doc/manual/conditionalbuilds
 
-%global rpmrel 4
+%global rpmrel 1
 
 Summary: Apache HTTP Server
 Name: httpd
-Version: 2.4.38
+Version: 2.4.39
 Release: %{rpmrel}%{?dist}
 URL: https://httpd.apache.org/
 Source0: https://www.apache.org/dist/httpd/httpd-%{version}.tar.bz2
@@ -48,8 +48,6 @@ Source24: 05-ssl.conf
 Source25: 10-listen443.conf
 Source26: httpd.socket
 Source29: httpd.logrotate
-
-# Documentation
 Source30: README.confd
 Source31: README.confmod
 
@@ -60,6 +58,8 @@ Source34: httpd.conf.xml
 Source40: htcacheclean.service
 Source41: htcacheclean.sysconf
 Source44: httpd@.service
+Source45: config.layout
+Source46: apachectl.sh
 
 # build/scripts patches
 Patch1: httpd-2.4.1-apctl.patch
@@ -230,12 +230,10 @@ Security (TLS) protocols.
 mv apr-%{aprver} srclib/apr
 mv apr-util-%{apuver} srclib/apr-util
 
-%patch1 -p1 -b .apctl
 %patch2 -p1 -b .apxs
 %patch3 -p1 -b .deplibs
 
 %if 0%{?rhel} >= 7
-%patch6 -p1 -b .apctlsystemd
 %patch19 -p1 -b .detectsystemd
 %endif
 
@@ -281,6 +279,9 @@ if test "x${vmmn}" != "x%{mmn}"; then
    : Update the mmn macro and rebuild.
    exit 1
 fi
+
+# Provide default layout
+cp $RPM_SOURCE_DIR/config.layout .
 
 sed '
 s,@MPM@,%{mpm},g
@@ -447,7 +448,7 @@ install -m 644 -p $RPM_SOURCE_DIR/httpd.tmpfiles \
 
 # Other directories
 mkdir -p $RPM_BUILD_ROOT%{_localstatedir}/lib/dav \
-         $RPM_BUILD_ROOT%{_localstatedir}/lib/httpd
+         $RPM_BUILD_ROOT%{_localstatedir}/lib/httpd/state
 %if 0%{?rhel} >= 7
 mkdir -p $RPM_BUILD_ROOT/run/httpd/htcacheclean
 %else
@@ -526,8 +527,9 @@ ln -s ../../pixmaps/poweredby.png \
         $RPM_BUILD_ROOT%{contentdir}/icons/poweredby.png
 
 # symlinks for /etc/httpd
+rmdir $RPM_BUILD_ROOT/etc/httpd/{state,run}
 ln -s ../..%{_localstatedir}/log/httpd $RPM_BUILD_ROOT/etc/httpd/logs
-ln -s ../..%{_localstatedir}/lib/httpd $RPM_BUILD_ROOT/etc/httpd/state
+ln -s ../..%{_localstatedir}/lib/httpd/state $RPM_BUILD_ROOT/etc/httpd/state
 %if 0%{?rhel} >= 7
 ln -s /run/httpd $RPM_BUILD_ROOT/etc/httpd/run
 %else
@@ -536,7 +538,8 @@ ln -s %{_localstatedir}/run/httpd $RPM_BUILD_ROOT/etc/httpd/run
 ln -s ../..%{_libdir}/httpd/modules $RPM_BUILD_ROOT/etc/httpd/modules
 
 %if 0%{?rhel} >= 7
-# Install action scripts
+# Install scripts
+install -p -m 755 $RPM_SOURCE_DIR/apachectl.sh $RPM_BUILD_ROOT%{_sbindir}/apachectl
 mkdir -p $RPM_BUILD_ROOT%{_libexecdir}/initscripts/legacy-actions/httpd
 for f in graceful configtest; do
     install -p -m 755 $RPM_SOURCE_DIR/action-${f}.sh \
@@ -785,8 +788,24 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %changelog
-* Mon Mar  4 2019 Alexander Ursu <alexander.ursu@gmail.com> - 2.4.38-4
-- switched back to user-group apache/apache
+* Tue Apr 02 2019 Lubos Uhliarik <luhliari@redhat.com> - 2.4.39-1
+- update to 2.4.39
+
+* Thu Feb 28 2019 Joe Orton <jorton@redhat.com> - 2.4.38-6
+- apachectl: cleanup and replace script wholesale (#1641237)
+ * drop "apachectl fullstatus" support
+ * run systemctl with --no-pager option
+ * implement graceful&graceful-stop by signal directly
+- run "httpd -t" from legacy action script
+
+* Tue Feb 05 2019 Lubos Uhliarik <luhliari@redhat.com> - 2.4.38-5
+- segmentation fault fix (FIPS)
+
+* Tue Feb  5 2019 Joe Orton <jorton@redhat.com> - 2.4.38-4
+- use serverroot-relative statedir, rundir by default
+
+* Fri Feb 01 2019 Fedora Release Engineering <releng@fedoraproject.org> - 2.4.38-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_30_Mass_Rebuild
 
 * Wed Jan 23 2019 Lubos Uhliarik <luhliari@redhat.com> - 2.4.38-2
 - new version 2.4.38 (#1668125)

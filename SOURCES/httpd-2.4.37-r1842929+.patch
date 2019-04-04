@@ -1,9 +1,10 @@
 # ./pullrev.sh 1842929 1842931
 http://svn.apache.org/viewvc?view=revision&revision=1842929
 http://svn.apache.org/viewvc?view=revision&revision=1842931
+http://svn.apache.org/viewvc?view=revision&revision=1852982
 
---- httpd-2.4.37/acinclude.m4.r1842929+
-+++ httpd-2.4.37/acinclude.m4
+--- httpd-2.4.38/acinclude.m4.r1842929+
++++ httpd-2.4.38/acinclude.m4
 @@ -45,6 +45,7 @@
    APACHE_SUBST(installbuilddir)
    APACHE_SUBST(runtimedir)
@@ -20,8 +21,8 @@ http://svn.apache.org/viewvc?view=revision&revision=1842931
  ])
  
  dnl 
---- httpd-2.4.37/config.layout.r1842929+
-+++ httpd-2.4.37/config.layout
+--- httpd-2.4.38/config.layout.r1842929+
++++ httpd-2.4.38/config.layout
 @@ -29,6 +29,7 @@
      includedir:    ${prefix}/include
      localstatedir: ${prefix}
@@ -142,8 +143,8 @@ http://svn.apache.org/viewvc?view=revision&revision=1842931
      logfiledir:      ${localstatedir}/log/httpd
      proxycachedir:   ${localstatedir}/cache/httpd
  </Layout>
---- httpd-2.4.37/configure.in.r1842929+
-+++ httpd-2.4.37/configure.in
+--- httpd-2.4.38/configure.in.r1842929+
++++ httpd-2.4.38/configure.in
 @@ -41,7 +41,7 @@
  AC_PREFIX_DEFAULT(/usr/local/apache2)
  
@@ -153,8 +154,8 @@ http://svn.apache.org/viewvc?view=revision&revision=1842931
  
  dnl reparse the configure arguments.
  APR_PARSE_ARGUMENTS
---- httpd-2.4.37/include/ap_config_layout.h.in.r1842929+
-+++ httpd-2.4.37/include/ap_config_layout.h.in
+--- httpd-2.4.38/include/ap_config_layout.h.in.r1842929+
++++ httpd-2.4.38/include/ap_config_layout.h.in
 @@ -60,5 +60,7 @@
  #define DEFAULT_REL_LOGFILEDIR "@rel_logfiledir@"
  #define DEFAULT_EXP_PROXYCACHEDIR "@exp_proxycachedir@"
@@ -163,8 +164,8 @@ http://svn.apache.org/viewvc?view=revision&revision=1842931
 +#define DEFAULT_REL_STATEDIR "@rel_statedir@"
  
  #endif /* AP_CONFIG_LAYOUT_H */
---- httpd-2.4.37/include/http_config.h.r1842929+
-+++ httpd-2.4.37/include/http_config.h
+--- httpd-2.4.38/include/http_config.h.r1842929+
++++ httpd-2.4.38/include/http_config.h
 @@ -757,6 +757,14 @@
   */
  AP_DECLARE(char *) ap_runtime_dir_relative(apr_pool_t *p, const char *fname);
@@ -180,8 +181,8 @@ http://svn.apache.org/viewvc?view=revision&revision=1842931
  /* Finally, the hook for dynamically loading modules in... */
  
  /**
---- httpd-2.4.37/Makefile.in.r1842929+
-+++ httpd-2.4.37/Makefile.in
+--- httpd-2.4.38/Makefile.in.r1842929+
++++ httpd-2.4.38/Makefile.in
 @@ -213,6 +213,7 @@
  install-other:
  	@test -d $(DESTDIR)$(logfiledir) || $(MKINSTALLDIRS) $(DESTDIR)$(logfiledir)
@@ -190,8 +191,8 @@ http://svn.apache.org/viewvc?view=revision&revision=1842931
  	@for ext in dll x; do \
  		file=apachecore.$$ext; \
  		if test -f $$file; then \
---- httpd-2.4.37/modules/dav/fs/mod_dav_fs.c.r1842929+
-+++ httpd-2.4.37/modules/dav/fs/mod_dav_fs.c
+--- httpd-2.4.38/modules/dav/fs/mod_dav_fs.c.r1842929+
++++ httpd-2.4.38/modules/dav/fs/mod_dav_fs.c
 @@ -29,6 +29,10 @@
  
  extern module AP_MODULE_DECLARE_DATA dav_fs_module;
@@ -216,14 +217,14 @@ http://svn.apache.org/viewvc?view=revision&revision=1842931
  }
  
  static void *dav_fs_merge_server_config(apr_pool_t *p,
---- httpd-2.4.37/modules/md/mod_md_config.c.r1842929+
-+++ httpd-2.4.37/modules/md/mod_md_config.c
+--- httpd-2.4.38/modules/md/mod_md_config.c.r1842929+
++++ httpd-2.4.38/modules/md/mod_md_config.c
 @@ -54,10 +54,14 @@
  
  #define DEF_VAL     (-1)
  
 +#ifndef MD_DEFAULT_BASE_DIR
-+#define MD_DEFAULT_BASE_DIR "state/md"
++#define MD_DEFAULT_BASE_DIR "md"
 +#endif
 +
  /* Default settings for the global conf */
@@ -242,8 +243,8 @@ http://svn.apache.org/viewvc?view=revision&revision=1842931
          
          apr_pool_cleanup_register(pool, NULL, cleanup_mod_config, apr_pool_cleanup_null);
      }
---- httpd-2.4.37/server/core.c.r1842929+
-+++ httpd-2.4.37/server/core.c
+--- httpd-2.4.38/server/core.c.r1842929+
++++ httpd-2.4.38/server/core.c
 @@ -129,6 +129,8 @@
  AP_DECLARE_DATA int ap_run_mode = AP_SQ_RM_UNKNOWN;
  AP_DECLARE_DATA int ap_config_generation = 0;
@@ -287,7 +288,15 @@ http://svn.apache.org/viewvc?view=revision&revision=1842931
  AP_INIT_TAKE1("ErrorLog", set_server_string_slot,
    (void *)APR_OFFSETOF(server_rec, error_fname), RSRC_CONF,
    "The filename of the error log"),
-@@ -5150,6 +5172,27 @@
+@@ -4927,6 +4949,7 @@
+     ap_regcomp_set_default_cflags(AP_REG_DOLLAR_ENDONLY);
+ 
+     mpm_common_pre_config(pconf);
++    core_state_dir = NULL;
+ 
+     return OK;
+ }
+@@ -5150,6 +5173,27 @@
      }
  }
  

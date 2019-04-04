@@ -1,2 +1,2 @@
 #!/bin/sh
-exec /sbin/apachectl configtest "$@"
+exec /usr/sbin/httpd -t
