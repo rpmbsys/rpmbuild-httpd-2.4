@@ -18,7 +18,7 @@
 
 # https://github.com/rpm-software-management/rpm/blob/master/doc/manual/conditionalbuilds
 
-%global rpmrel 1
+%global rpmrel 2
 
 Summary: Apache HTTP Server
 Name: httpd
@@ -789,6 +789,9 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %changelog
+* Thu Apr 04 2019 Alexander Ursu <alexander.ursu@gmail.com> - 2.4.39-2
+- return back Patch1 (CentOS 6 support)
+
 * Tue Apr 02 2019 Lubos Uhliarik <luhliari@redhat.com> - 2.4.39-1
 - update to 2.4.39
 
