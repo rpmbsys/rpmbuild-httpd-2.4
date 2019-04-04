@@ -230,6 +230,7 @@ Security (TLS) protocols.
 mv apr-%{aprver} srclib/apr
 mv apr-util-%{apuver} srclib/apr-util
 
+%patch1 -p1 -b .apctl
 %patch2 -p1 -b .apxs
 %patch3 -p1 -b .deplibs
 
