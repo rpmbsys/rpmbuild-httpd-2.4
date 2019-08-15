@@ -18,11 +18,11 @@
 
 # https://github.com/rpm-software-management/rpm/blob/master/doc/manual/conditionalbuilds
 
-%global rpmrel 2
+%global rpmrel 1
 
 Summary: Apache HTTP Server
 Name: httpd
-Version: 2.4.39
+Version: 2.4.41
 Release: %{rpmrel}%{?dist}
 URL: https://httpd.apache.org/
 Source0: https://www.apache.org/dist/httpd/httpd-%{version}.tar.bz2
@@ -72,8 +72,8 @@ Patch6: httpd-2.4.34-apctlsystemd.patch
 Patch19: httpd-2.4.25-detect-systemd.patch
 
 # Features/functional changes
-Patch21: httpd-2.4.37-r1842929+.patch
-Patch23: httpd-2.4.33-export.patch
+Patch21: httpd-2.4.39-r1842929+.patch
+Patch23: httpd-2.4.39-export.patch
 Patch24: httpd-2.4.1-corelimit.patch
 Patch25: httpd-2.4.25-selinux.patch
 Patch26: httpd-2.4.4-r1337344+.patch
@@ -91,6 +91,9 @@ Patch34: httpd-2.4.17-socket-activation.patch
 Patch36: httpd-2.4.38-r1830819+.patch
 Patch38: httpd-2.4.34-sslciphdefault.patch
 Patch39: httpd-2.4.37-sslprotdefault.patch
+Patch40: httpd-2.4.39-r1861269.patch
+Patch41: httpd-2.4.37-r1861793+.patch
+Patch42: httpd-2.4.37-r1828172+.patch
 
 # ulimit to apachectl
 Patch41: httpd-2.4.27-apct2.patch
@@ -259,6 +262,9 @@ mv apr-util-%{apuver} srclib/apr-util
 %patch36 -p1 -b .r1830819+
 %patch38 -p1 -b .sslciphdefault
 %patch39 -p1 -b .sslprotdefault
+%patch40 -p1 -b .r1861269
+%patch41 -p1 -b .r1861793+
+%patch42 -p1 -b .r1828172+
 
 %patch41 -p1 -b .apct2
 %patch42 -p1 -b .static
@@ -448,8 +454,7 @@ install -m 644 -p $RPM_SOURCE_DIR/httpd.tmpfiles \
 %endif
 
 # Other directories
-mkdir -p $RPM_BUILD_ROOT%{_localstatedir}/lib/dav \
-         $RPM_BUILD_ROOT%{_localstatedir}/lib/httpd/state
+mkdir -p $RPM_BUILD_ROOT%{_localstatedir}/lib/httpd
 %if 0%{?rhel} >= 7
 mkdir -p $RPM_BUILD_ROOT/run/httpd/htcacheclean
 %else
@@ -458,12 +463,16 @@ mkdir -p $RPM_BUILD_ROOT%{_localstatedir}/run/httpd/htcacheclean
 
 # Substitute in defaults which are usually done (badly) by "make install"
 sed -i \
-   "s,@@ServerRoot@@/var,%{_localstatedir}/lib/dav,;
+   "/^DavLockDB/d;
     s,@@ServerRoot@@/user.passwd,/etc/httpd/conf/user.passwd,;
     s,@@ServerRoot@@/docs,%{docroot},;
     s,@@ServerRoot@@,%{docroot},;
     s,@@Port@@,80,;" \
     docs/conf/extra/*.conf
+
+# Set correct path for httpd binary in apachectl script
+sed 's,@HTTPDBIN@,%{_sbindir}/httpd,g' $RPM_SOURCE_DIR/apachectl.sh \
+    > apachectl.sh
 
 # Create cache directory
 mkdir -p $RPM_BUILD_ROOT%{_localstatedir}/cache/httpd \
@@ -530,7 +539,7 @@ ln -s ../../pixmaps/poweredby.png \
 # symlinks for /etc/httpd
 rmdir $RPM_BUILD_ROOT/etc/httpd/{state,run}
 ln -s ../..%{_localstatedir}/log/httpd $RPM_BUILD_ROOT/etc/httpd/logs
-ln -s ../..%{_localstatedir}/lib/httpd/state $RPM_BUILD_ROOT/etc/httpd/state
+ln -s ../..%{_localstatedir}/lib/httpd $RPM_BUILD_ROOT/etc/httpd/state
 %if 0%{?rhel} >= 7
 ln -s /run/httpd $RPM_BUILD_ROOT/etc/httpd/run
 %else
@@ -540,7 +549,8 @@ ln -s ../..%{_libdir}/httpd/modules $RPM_BUILD_ROOT/etc/httpd/modules
 
 %if 0%{?rhel} >= 7
 # Install scripts
-install -p -m 755 $RPM_SOURCE_DIR/apachectl.sh $RPM_BUILD_ROOT%{_sbindir}/apachectl
+install -m 755 apachectl.sh $RPM_BUILD_ROOT%{_sbindir}/apachectl
+touch -r $RPM_SOURCE_DIR/apachectl.sh $RPM_BUILD_ROOT%{_sbindir}/apachectl
 mkdir -p $RPM_BUILD_ROOT%{_libexecdir}/initscripts/legacy-actions/httpd
 for f in graceful configtest; do
     install -p -m 755 $RPM_SOURCE_DIR/action-${f}.sh \
@@ -622,7 +632,7 @@ fi
 
 %postun
 %if 0%{?rhel} >= 7
-%systemd_postun
+%systemd_postun httpd.service htcacheclean.service httpd.socket
 %endif
 
 # Trigger for conversion from SysV, per guidelines at:
@@ -703,7 +713,6 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0700,apache,apache) %dir %{_localstatedir}/run/httpd/htcacheclean
 %endif
 %attr(0700,root,root) %dir %{_localstatedir}/log/httpd
-%attr(0700,apache,apache) %dir %{_localstatedir}/lib/dav
 %attr(0700,apache,apache) %dir %{_localstatedir}/lib/httpd
 %attr(0700,apache,apache) %dir %{_localstatedir}/cache/httpd
 %attr(0700,apache,apache) %dir %{_localstatedir}/cache/httpd/proxy

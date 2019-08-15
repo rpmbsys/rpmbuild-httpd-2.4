@@ -129,12 +129,12 @@
       <title>Module configuration files</title>
 
       <para>Module configuration files are provided in the
-      <filename>/etc/httpd/conf.modules.d/</filename> directory.  Filenames
-      in this directory are by convention prefixed with two digit numeric
-      prefix to ensure they are processed in the desired order.  Core
-      modules provide with the <command>httpd</command> package are
-      loaded by files with a <option>0x-</option> prefix to ensure
-      these are loaded first.  Only filenames with a
+      <filename>/etc/httpd/conf.modules.d/</filename> directory.
+      Filenames in this directory are by convention prefixed with two
+      digit numeric prefix to ensure they are processed in the desired
+      order.  Core modules provided with the <command>httpd</command>
+      package are loaded by files with a <option>0x-</option> prefix
+      to ensure these load first.  Only filenames with a
       <option>.conf</option> suffix in this directory will be
       processed.</para>
 
@@ -160,8 +160,8 @@
           <term><filename>/etc/httpd/conf.modules.d/00-systemd.conf</filename></term>
           <listitem><para>This file loads <option>mod_systemd</option>
           which is necessary for the correct operation of the
-          <command>httpd.service</command> service, and should not be
-          removed or disabled.</para></listitem>
+          <command>httpd.service</command> systemd unit, and should
+          not be removed or disabled.</para></listitem>
         </varlistentry>
       </variablelist>
       </para>
