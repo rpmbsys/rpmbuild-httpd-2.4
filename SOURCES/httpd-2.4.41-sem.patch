@@ -1,0 +1,13 @@
+diff -rup httpd-2.4.41.orig/srclib/apr/configure.in httpd-2.4.41/srclib/apr/configure.in
+--- httpd-2.4.41.orig/srclib/apr/configure.in	2019-04-01 19:40:46.000000000 +0200
++++ httpd-2.4.41/srclib/apr/configure.in	2019-08-15 13:49:35.000000000 +0200
+@@ -2368,6 +2368,9 @@ APR_IFALLYES(header:fcntl.h define:F_SET
+             APR_DECIDE(USE_FCNTL_SERIALIZE, [SVR4-style fcntl()]))
+ APR_IFALLYES(func:semget func:semctl func:semop define:SEM_UNDO,
+             APR_DECIDE(USE_SYSVSEM_SERIALIZE, [SysV IPC semget()]))
++APR_IFALLYES(header:semaphore.h func:sem_open func:sem_close dnl
++             func:sem_unlink func:sem_post func:sem_wait,
++            APR_DECIDE(USE_POSIXSEM_SERIALIZE, [POSIX Semaphores sem_post()]))
+ APR_IFALLYES(header:OS.h func:create_sem func:acquire_sem func:acquire_sem_etc, 
+             APR_DECIDE(USE_BEOSSEM, [BeOS Semaphores])) 
+ # pthread mutex both pshared and robust[_np] is the best default

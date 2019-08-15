@@ -68,6 +68,11 @@ Patch3: httpd-2.4.1-deplibs.patch
 
 # CentOS 7
 Patch6: httpd-2.4.34-apctlsystemd.patch
+
+# CentOS 6
+Patch18: httpd-2.4.25-httpd-libs.patch
+
+# CentOS 7
 # Needed for socket activation and mod_systemd patch
 Patch19: httpd-2.4.25-detect-systemd.patch
 
@@ -102,7 +107,7 @@ Patch44: httpd-2.4.27-static.patch
 # compile apache with bundled APR and APR-Util
 Patch45: httpd-2.4.27-apr.patch
 # Set POSIX Semaphores as default
-Patch46: httpd-2.4.27-sem.patch
+Patch46: httpd-2.4.41-sem.patch
 
 # Bug fixes
 # https://bugzilla.redhat.com/show_bug.cgi?id=1397243
@@ -239,13 +244,14 @@ mv apr-util-%{apuver} srclib/apr-util
 
 %if 0%{?rhel} >= 7
 %patch19 -p1 -b .detectsystemd
+%else
+%patch18 -p1 -b .hlibs
 %endif
 
 %patch21 -p1 -b .r1842929+
 %patch23 -p1 -b .export
 %patch24 -p1 -b .corelimit
 %patch25 -p1 -b .selinux
-#%patch26 -p1 -b .r1337344+
 %patch27 -p1 -b .icons
 
 %if 0%{?rhel} >= 7
