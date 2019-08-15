@@ -11,7 +11,7 @@
 
 %global mpm prefork
 
-%define aprver 1.6.5
+%define aprver 1.7.0
 %define apuver 1.6.1
 %define aprlibver 1
 %define apulibver 1
@@ -798,6 +798,12 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %changelog
+* Thu Aug 15 2019 Alexander Ursu <alexander.ursu@gmail.com> - 2.4.41-2
+- upgrade APR to version 1.7.0
+
+* Thu Aug 15 2019 Joe Orton <jorton@redhat.com> - 2.4.41-1
+- update to 2.4.41
+
 * Thu Apr 04 2019 Alexander Ursu <alexander.ursu@gmail.com> - 2.4.39-3
 - upgrade APR to version 1.6.5
 
