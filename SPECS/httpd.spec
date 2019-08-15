@@ -96,13 +96,13 @@ Patch41: httpd-2.4.37-r1861793+.patch
 Patch42: httpd-2.4.37-r1828172+.patch
 
 # ulimit to apachectl
-Patch41: httpd-2.4.27-apct2.patch
+Patch43: httpd-2.4.27-apct2.patch
 # compile apache statically with apr and apr-util
-Patch42: httpd-2.4.27-static.patch
+Patch44: httpd-2.4.27-static.patch
 # compile apache with bundled APR and APR-Util
-Patch43: httpd-2.4.27-apr.patch
+Patch45: httpd-2.4.27-apr.patch
 # Set POSIX Semaphores as default
-Patch44: httpd-2.4.27-sem.patch
+Patch46: httpd-2.4.27-sem.patch
 
 # Bug fixes
 # https://bugzilla.redhat.com/show_bug.cgi?id=1397243
@@ -266,10 +266,10 @@ mv apr-util-%{apuver} srclib/apr-util
 %patch41 -p1 -b .r1861793+
 %patch42 -p1 -b .r1828172+
 
-%patch41 -p1 -b .apct2
-%patch42 -p1 -b .static
-%patch43 -p1 -b .apr
-%patch44 -p1 -b .sem
+%patch43 -p1 -b .apct2
+%patch44 -p1 -b .static
+%patch45 -p1 -b .apr
+%patch46 -p1 -b .sem
 
 %patch58 -p1 -b .r1738878
 %patch60 -p1 -b .enable-sslv3
