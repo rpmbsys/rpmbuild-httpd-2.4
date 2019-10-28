@@ -3,7 +3,6 @@ jobs:
   build:
     machine:
       image: ubuntu-1604:201903-01
-      docker_layer_caching: true
     environment:
       BINTRAY_REPO: custom
       PACKAGE_VCS_URL: https://github.com/aursu/rpmbuild-httpd-2.4
@@ -40,9 +39,3 @@ jobs:
               -e BINTRAY_API_KEY=$BINTRAY_API_KEY \
               -e BINTRAY_REPO=$BINTRAY_REPO \
               -e PACKAGE_VCS_URL=$PACKAGE_VCS_URL centos6bintray
-      - run:
-          name: Deploy Docker images
-          command: |
-            docker login -u $DOCKER_USER -p $DOCKER_PASS
-            docker push aursu/ap24build:6-base
-            docker push aursu/ap24build:7-base
