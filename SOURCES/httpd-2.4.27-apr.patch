@@ -2,7 +2,7 @@ diff -rup httpd-2.4.27.orig/configure.in httpd-2.4.27/configure.in
 --- httpd-2.4.27.orig/configure.in	2016-12-02 12:36:06.000000000 +0100
 +++ httpd-2.4.27/configure.in	2017-09-01 01:48:52.092562146 +0200
 @@ -111,7 +111,7 @@ fi
- 
+
  if test "$apr_found" = "reconfig"; then
    APR_SUBDIR_CONFIG(srclib/apr,
 -                    [$apache_apr_flags --prefix=$prefix --exec-prefix=$exec_prefix --libdir=$libdir --includedir=$includedir --bindir=$bindir --datadir=$datadir --with-installbuilddir=$installbuilddir],
@@ -11,11 +11,11 @@ diff -rup httpd-2.4.27.orig/configure.in httpd-2.4.27/configure.in
    dnl We must be the first to build and the last to be cleaned
    AP_BUILD_SRCLIB_DIRS="apr $AP_BUILD_SRCLIB_DIRS"
 @@ -177,7 +177,7 @@ esac
- 
+
  if test "$apu_found" = "reconfig"; then
    APR_SUBDIR_CONFIG(srclib/apr-util,
 -                    [--with-apr=../apr --prefix=$prefix --exec-prefix=$exec_prefix --libdir=$libdir --includedir=$includedir --bindir=$bindir],
-+                    [--with-apr=../apr --prefix=$prefix --exec-prefix=$exec_prefix --libdir=$libdir --includedir=$exec_prefix/include/apr-1 --bindir=$bindir],
++                    [--with-apr=../apr --prefix=$prefix --exec-prefix=$exec_prefix --libdir=$libdir --includedir=$exec_prefix/include/apr-1 --bindir=$bindir --with-crypto --with-openssl],
                      [--enable-layout=*|\'--enable-layout=*])
    dnl We must be the last to build and the first to be cleaned
    AP_BUILD_SRCLIB_DIRS="$AP_BUILD_SRCLIB_DIRS apr-util"

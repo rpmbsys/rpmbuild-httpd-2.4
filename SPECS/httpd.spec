@@ -18,7 +18,7 @@
 
 # https://github.com/rpm-software-management/rpm/blob/master/doc/manual/conditionalbuilds
 
-%global rpmrel 1
+%global rpmrel 2
 
 Summary: Apache HTTP Server
 Name: httpd
@@ -367,6 +367,7 @@ export LYNX_PATH=/usr/bin/links
         --enable-proxy-balancer=no \
         --enable-proxy-express=no \
         --enable-proxy-uwsgi=no \
+        --enable-proxy-wstunnel=no \
     --enable-asis \
     --enable-cgi \
     --enable-vhost-alias \
@@ -778,6 +779,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libaprutil-%{apulibver}.*a
 %{_libdir}/libaprutil-%{apulibver}.so
 %{_libdir}/pkgconfig/apr-util-%{apulibver}.pc
+%{_libdir}/apr-util-%{apulibver}/apr_crypto_openssl*
 
 %files -n mod_ssl
 %defattr(-,root,root)
@@ -804,6 +806,9 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %changelog
+* Fri Dec  6 2019 Alexander Ursu <alexander.ursu@gmail.com> - 2.4.41-3
+- enable SSL/EVP support for included APR
+
 * Thu Aug 15 2019 Alexander Ursu <alexander.ursu@gmail.com> - 2.4.41-2
 - upgrade APR to version 1.7.0
 
