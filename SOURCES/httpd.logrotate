@@ -1,3 +1,5 @@
+# Note that logs are not compressed unless "compress" is configured,
+# which can be done either here or globally in /etc/logrotate.conf.
 /var/log/httpd/*log {
     missingok
     notifempty

@@ -39,14 +39,14 @@ start|stop|restart|status)
     ;;
 graceful)
     if /usr/bin/systemctl -q is-active $SVC; then
-        /usr/bin/systemctl kill --signal=SIGUSR1 $SVC
+        /usr/bin/systemctl kill --signal=SIGUSR1 --kill-who=main $SVC
     else
         /usr/bin/systemctl start $SVC
     fi
     ERROR=$?
     ;;
 graceful-stop)
-    /usr/bin/systemctl kill --signal=SIGWINCH $SVC
+    /usr/bin/systemctl kill --signal=SIGWINCH --kill-who=main $SVC
     ERROR=$?
     ;;
 configtest|-t)

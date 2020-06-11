@@ -33,7 +33,7 @@
     <refentrytitle>httpd.service</refentrytitle>
     <manvolnum>8</manvolnum>
   </refmeta>
-  
+
   <refnamediv>
     <refname>httpd.service</refname>
     <refname>httpd@.service</refname>
@@ -43,12 +43,12 @@
 
   <refsynopsisdiv>
     <para>
-      <filename>/usr/lib/systemd/system/httpd.service</filename>, 
+      <filename>/usr/lib/systemd/system/httpd.service</filename>,
       <filename>/usr/lib/systemd/system/httpd@.service</filename>,
       <filename>/usr/lib/systemd/system/httpd.socket</filename>
     </para>
   </refsynopsisdiv>
-  
+
   <refsect1>
     <title>Description</title>
 
@@ -94,7 +94,7 @@
       <programlisting>[Service]
 Environment=LD_LIBRARY_PATH=/opt/vendor/lib</programlisting></para>
     </refsect2>
-    
+
     <refsect2>
       <title>Starting the service at boot time</title>
 
@@ -159,12 +159,16 @@ Wants=network-online.target</programlisting>
       <para>System packages (including the httpd package itself) may
       restart the httpd service automatically after packages are
       upgraded, installed, or removed. This is done using the
-      <command>systemctl reload httpd.service</command>, which
-      produces a <emphasis>graceful</emphasis> restart by default as
-      described above.</para>
+      <command>systemctl try-restart httpd.service</command>, which
+      stops then starts the service if it is running.</para>
 
-      <para>To suppress automatic reloads entirely, create the file
-      <filename>/etc/sysconfig/httpd-disable-posttrans</filename>.</para>
+      <para>To disable automatic restarts, create the file
+      <filename>/etc/sysconfig/httpd-disable-posttrans</filename>.
+      When <command>httpd</command> interfaces are added in an update,
+      it may not be safe to <emphasis>reload</emphasis> a running
+      service after upgrading, if updated modules require interfaces
+      only available in the updated httpd.  It is recommended to allow
+      automatic restarts for this reason.</para>
     </refsect2>
 
     <refsect2>
@@ -172,17 +176,7 @@ Wants=network-online.target</programlisting>
 
       <para>httpd offers a choice of multi-processing modules (MPMs),
       which can be configured in
-      <filename>/etc/httpd/conf.modules.d/00-mpm.conf</filename>.  The
-      default is to use the <emphasis>@MPM@</emphasis> MPM.</para>
-
-      <para>If using the <emphasis>prefork</emphasis> MPM, the
-      "httpd_graceful_shutdown" SELinux boolean should also be
-      enabled, since with this MPM, httpd needs to establish TCP
-      connections to local ports to successfully complete a graceful
-      restart or shutdown. This boolean can be enabled by running the
-      command: <command>semanage boolean -m --on
-      httpd_graceful_shutdown</command>
-
+      <filename>/etc/httpd/conf.modules.d/00-mpm.conf</filename>.
       See
       <citerefentry><refentrytitle>httpd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
       for more information on changing the MPM.</para>
@@ -201,7 +195,7 @@ Wants=network-online.target</programlisting>
       <citerefentry><refentrytitle>systemd.exec</refentrytitle><manvolnum>5</manvolnum></citerefentry>
       for more information on systemd service types.</para>
     </refsect2>
-    
+
     <refsect2>
       <title>Security and SELinux</title>
 
@@ -224,6 +218,24 @@ Wants=network-online.target</programlisting>
       <citerefentry><refentrytitle>systemd.exec</refentrytitle><manvolnum>5</manvolnum></citerefentry>
       for more information.</para>
 
+    </refsect2>
+
+    <refsect2>
+      <title>Logging and log file rotation</title>
+
+      <para>The <command>httpd</command> daemon is configured to log
+      to the <filename>/var/log/httpd</filename> directory by default,
+      and a drop-in for <command>logrotate</command> is provided at
+      <filename>/etc/logrotate.d/httpd</filename> to enable log file
+      rotation.  The <command>httpd.service</command> systemd unit is
+      reloaded after a <command>logrotate</command> run.</para>
+
+      <para>Log file compression is not enabled by default; since
+      <command>httpd</command> can continue writing to open log files
+      for some time after a reload (graceful restart), if compression
+      is enabled the <literal>delaycompress</literal> option must be
+      present (as in the default) to delay compression of log files to
+      a later rotation run.</para>
     </refsect2>
 
     <refsect2>
@@ -303,20 +315,21 @@ ReloadPropagatedFrom=httpd.service</programlisting>
     <filename>/usr/lib/systemd/system/httpd@.service</filename>,
     <filename>/etc/systemd/systemd/httpd.service.d</filename></para>
   </refsect1>
-  
+
   <refsect1>
     <title>See also</title>
 
     <para>
-    <citerefentry><refentrytitle>httpd</refentrytitle><manvolnum>8</manvolnum></citerefentry>, 
+    <citerefentry><refentrytitle>httpd</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
     <citerefentry><refentrytitle>httpd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>,
-    <citerefentry><refentrytitle>systemd</refentrytitle><manvolnum>1</manvolnum></citerefentry>, 
-    <citerefentry><refentrytitle>systemctl</refentrytitle><manvolnum>1</manvolnum></citerefentry>, 
+    <citerefentry><refentrytitle>systemd</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+    <citerefentry><refentrytitle>systemctl</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
     <citerefentry><refentrytitle>systemd.service</refentrytitle><manvolnum>5</manvolnum></citerefentry>,
     <citerefentry><refentrytitle>systemd.exec</refentrytitle><manvolnum>5</manvolnum></citerefentry>,
     <citerefentry><refentrytitle>systemd.socket</refentrytitle><manvolnum>5</manvolnum></citerefentry>,
     <citerefentry><refentrytitle>httpd_selinux</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
-    <citerefentry><refentrytitle>semanage</refentrytitle><manvolnum>8</manvolnum></citerefentry>
+    <citerefentry><refentrytitle>semanage</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
+    <citerefentry><refentrytitle>logrotate</refentrytitle><manvolnum>8</manvolnum></citerefentry>
     </para>
   </refsect1>
 

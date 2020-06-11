@@ -22,83 +22,62 @@
 
 Summary: Apache HTTP Server
 Name: httpd
-Version: 2.4.41
+Version: 2.4.43
 Release: %{rpmrel}%{?dist}
 URL: https://httpd.apache.org/
 Source0: https://www.apache.org/dist/httpd/httpd-%{version}.tar.bz2
 Source1: https://www.apache.org/dist/apr/apr-%{aprver}.tar.bz2
 Source2: https://www.apache.org/dist/apr/apr-util-%{apuver}.tar.bz2
-Source8: index.html
-Source9: server-status.conf
-Source10: httpd.sysconf
-
-# CentOS 7
-Source11: httpd.tmpfiles
-Source12: httpd.service
-Source13: action-graceful.sh
-Source14: action-configtest.sh
-
-Source15: httpd.init
-
-Source16: httpd.conf
-Source23: 00-ssl.conf
-Source24: 05-ssl.conf
-
-# CentOS 7
-Source25: 10-listen443.conf
-Source26: httpd.socket
-Source29: httpd.logrotate
+Source3: httpd.logrotate
+Source6: httpd.tmpfiles
+Source7: httpd.service
+Source8: action-graceful.sh
+Source9: action-configtest.sh
+Source10: server-status.conf
+Source11: httpd.conf
+Source18: 00-ssl.conf
+Source22: 05-ssl.conf
+Source27: 10-listen443.conf
+Source28: httpd.socket
 Source30: README.confd
 Source31: README.confmod
-
-# CentOS 7
 Source32: httpd.service.xml
 Source33: htcacheclean.service.xml
 Source34: httpd.conf.xml
+Source35: index.html
+Source36: httpd.sysconf
+Source37: httpd.init
 Source40: htcacheclean.service
 Source41: htcacheclean.sysconf
 Source44: httpd@.service
 Source45: config.layout
 Source46: apachectl.sh
+Source47: apachectl.xml
 
 # build/scripts patches
 Patch1: httpd-2.4.1-apctl.patch
-Patch2: httpd-2.4.9-apxs.patch
-Patch3: httpd-2.4.1-deplibs.patch
-
+Patch2: httpd-2.4.43-apxs.patch
+Patch3: httpd-2.4.43-deplibs.patch
 # CentOS 7
 Patch6: httpd-2.4.34-apctlsystemd.patch
-
 # CentOS 6
 Patch18: httpd-2.4.25-httpd-libs.patch
-
-# CentOS 7
 # Needed for socket activation and mod_systemd patch
-Patch19: httpd-2.4.25-detect-systemd.patch
-
+Patch19: httpd-2.4.43-detect-systemd.patch
 # Features/functional changes
-Patch21: httpd-2.4.39-r1842929+.patch
-Patch23: httpd-2.4.39-export.patch
-Patch24: httpd-2.4.1-corelimit.patch
-Patch25: httpd-2.4.25-selinux.patch
-Patch26: httpd-2.4.4-r1337344+.patch
-Patch27: httpd-2.4.2-icons.patch
-
-# CentOS 7
-Patch29: httpd-2.4.33-systemd.patch
-
-Patch30: httpd-2.4.4-cachehardmax.patch
-Patch31: httpd-2.4.33-sslmultiproxy.patch
-
-# CentOS 7
-Patch34: httpd-2.4.17-socket-activation.patch
-
-Patch36: httpd-2.4.38-r1830819+.patch
-Patch38: httpd-2.4.34-sslciphdefault.patch
-Patch39: httpd-2.4.37-sslprotdefault.patch
-Patch40: httpd-2.4.39-r1861269.patch
-Patch41: httpd-2.4.37-r1861793+.patch
-Patch42: httpd-2.4.37-r1828172+.patch
+Patch21: httpd-2.4.43-r1842929+.patch
+Patch23: httpd-2.4.43-export.patch
+Patch24: httpd-2.4.43-corelimit.patch
+Patch25: httpd-2.4.43-selinux.patch
+Patch27: httpd-2.4.43-icons.patch
+Patch30: httpd-2.4.43-cachehardmax.patch
+Patch31: httpd-2.4.43-sslmultiproxy.patch
+Patch34: httpd-2.4.43-socket-activation.patch
+Patch38: httpd-2.4.43-sslciphdefault.patch
+Patch39: httpd-2.4.43-sslprotdefault.patch
+Patch40: httpd-2.4.43-r1861269.patch
+Patch41: httpd-2.4.43-r1861793+.patch
+Patch42: httpd-2.4.43-r1828172+.patch
 
 # ulimit to apachectl
 Patch43: httpd-2.4.27-apct2.patch
@@ -111,8 +90,8 @@ Patch46: httpd-2.4.41-sem.patch
 
 # Bug fixes
 # https://bugzilla.redhat.com/show_bug.cgi?id=1397243
-Patch58: httpd-2.4.34-r1738878.patch
-Patch60: httpd-2.4.34-enable-sslv3.patch
+Patch60: httpd-2.4.43-enable-sslv3.patch
+Patch62: httpd-2.4.43-r1870095+.patch
 
 # Security fixes
 
@@ -254,18 +233,13 @@ mv apr-util-%{apuver} srclib/apr-util
 %patch25 -p1 -b .selinux
 %patch27 -p1 -b .icons
 
-%if 0%{?rhel} >= 7
-%patch29 -p1 -b .systemd
-%endif
-
 %patch30 -p1 -b .cachehardmax
-#%patch31 -p1 -b .sslmultiproxy
+#patch31 -p1 -b .sslmultiproxy
 
 %if 0%{?rhel} >= 7
 %patch34 -p1 -b .socketactivation
 %endif
 
-%patch36 -p1 -b .r1830819+
 %patch38 -p1 -b .sslciphdefault
 %patch39 -p1 -b .sslprotdefault
 %patch40 -p1 -b .r1861269
@@ -277,8 +251,8 @@ mv apr-util-%{apuver} srclib/apr-util
 %patch45 -p1 -b .apr
 %patch46 -p1 -b .sem
 
-%patch58 -p1 -b .r1738878
 %patch60 -p1 -b .enable-sslv3
+%patch62 -p1 -b .r1870095
 
 # Patch in the vendor string
 sed -i '/^#define PLATFORM/s/Unix/%{vstring}/' os/unix/os.h
@@ -308,6 +282,8 @@ xmlto man ./httpd.conf.xml
 xmlto man $RPM_SOURCE_DIR/htcacheclean.service.xml
 xmlto man $RPM_SOURCE_DIR/httpd.service.xml
 %endif
+# apachectl.xml => apachectl.8
+xmlto man %{SOURCE47}
 
 : Building with MMN %{mmn}, MMN-ISA %{mmnisa} and vendor string '%{vstring}'
 
@@ -373,12 +349,13 @@ export LYNX_PATH=/usr/bin/links
     --enable-vhost-alias \
     --enable-negotiation \
     --enable-actions \
-    --enable-speling \
-    --enable-userdir \
-    --enable-rewrite \
-    --enable-substitute \
     --enable-remoteip \
+    --enable-rewrite \
     --enable-socache-shmcb \
+    --enable-speling \
+    --enable-substitute \
+    --enable-unique-id \
+    --enable-userdir \
     --enable-ssl=shared \
 %if 0%{?rhel} >= 7
     --enable-systemd=static \
@@ -403,7 +380,7 @@ done
 %else
 # install SYSV init stuff
 mkdir -p $RPM_BUILD_ROOT/etc/rc.d/init.d
-install -m 755 %{SOURCE15} \
+install -m 755 %{SOURCE37} \
         $RPM_BUILD_ROOT/etc/rc.d/init.d/httpd
 %endif
 
@@ -576,6 +553,7 @@ install -m 644 -p httpd.service.8 httpd.socket.8 httpd@.service.8 \
     htcacheclean.service.8 \
     $RPM_BUILD_ROOT%{_mandir}/man8
 %endif
+install -m 644 -p apachectl.8 $RPM_BUILD_ROOT%{_mandir}/man8
 
 # Install man pages
 install -d $RPM_BUILD_ROOT%{_mandir}/man5
@@ -806,6 +784,33 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %changelog
+* Tue Mar 31 2020 Lubos Uhliarik <luhliari@redhat.com> - 2.4.43-1
+- new version 2.4.43 (#1819023)
+
+* Mon Jan 20 2020 Joe Orton <jorton@redhat.com> - 2.4.41-12
+- mod_systemd: fix timeouts on reload w/ExtendedStatus off (#1590877)
+
+* Mon Jan  6 2020 Joe Orton <jorton@redhat.com> - 2.4.41-11
+- apachectl(8): update authors
+
+* Sat Dec  7 2019 FeRD (Frank Dana) <ferdnyc@gmail.com> - 2.4.41-10
+- apachectl: Add man page for Fedora version
+
+* Thu Nov 21 2019 Joe Orton <jorton@redhat.com> - 2.4.41-9
+- mod_ssl: fix request body buffering w/TLSv1.3 PHA (#1775146)
+
+* Wed Nov 13 2019 Joe Orton <jorton@redhat.com> - 2.4.41-8
+- apachectl: in graceful/graceful-stop, only signal main process (#1758798)
+
+* Fri Oct  4 2019 Joe Orton <jorton@redhat.com> - 2.4.41-6
+- mod_cgid/mod_cgi: further upstream consolidation patches
+
+* Thu Oct  3 2019 Joe Orton <jorton@redhat.com> - 2.4.41-5
+- mod_proxy_balancer: fix balancer-manager XSRF check (PR 63688)
+
+* Wed Oct  2 2019 Joe Orton <jorton@redhat.com> - 2.4.41-4
+- mod_cgid: possible stdout timeout handling fix (#1757683)
+
 * Fri Dec  6 2019 Alexander Ursu <alexander.ursu@gmail.com> - 2.4.41-3
 - enable SSL/EVP support for included APR
 
