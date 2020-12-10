@@ -7,12 +7,16 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.el6
+      args:
+        centos: $OS6
   centos7ap24build:
     volumes:
       - rpms:/home/centos/rpmbuild/SRPMS
       - rpm7:/home/centos/rpmbuild/RPMS
     build:
       context: .
+      args:
+        centos: $OS7
 
 volumes:
   rpms:

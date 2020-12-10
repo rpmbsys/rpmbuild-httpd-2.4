@@ -1,4 +1,5 @@
-FROM aursu/ap24build:7-base
+ARG centos=7.9.2009
+FROM aursu/ap24build:${centos}-base
 
 COPY SOURCES ${BUILD_TOPDIR}/SOURCES
 COPY SPECS ${BUILD_TOPDIR}/SPECS

@@ -4,9 +4,13 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.6-base
-    image: aursu/ap24build:6-base
+      args:
+        centos: $OS6
+    image: aursu/ap24build:${OS6}-base
   centos7ap24base:
     build:
       context: .
       dockerfile: Dockerfile.base
-    image: aursu/ap24build:7-base
+      args:
+        centos: $OS7
+    image: aursu/ap24build:${OS7}-base

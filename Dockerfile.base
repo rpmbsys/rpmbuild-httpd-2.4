@@ -1,4 +1,5 @@
-FROM aursu/rpmbuild:7-build
+ARG centos=7.9.2009
+FROM aursu/rpmbuild:${centos}-build
 
 USER root
 RUN yum -y install \
