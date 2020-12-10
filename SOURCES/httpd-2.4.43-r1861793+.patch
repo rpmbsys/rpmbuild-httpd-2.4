@@ -1,8 +1,8 @@
 diff --git a/configure.in b/configure.in
 index cb43246..0bb6b0d 100644
---- a/configure.in
-+++ b/configure.in
-@@ -465,6 +465,28 @@ LIBS=""
+--- httpd-2.4.43/configure.in.r1861793+
++++ httpd-2.4.43/configure.in
+@@ -465,6 +465,28 @@
  AC_SEARCH_LIBS(crypt, crypt)
  CRYPT_LIBS="$LIBS"
  APACHE_SUBST(CRYPT_LIBS)
@@ -31,11 +31,9 @@ index cb43246..0bb6b0d 100644
  LIBS="$saved_LIBS"
  
  dnl See Comment #Spoon
-diff --git a/docs/man/htpasswd.1 b/docs/man/htpasswd.1
-index d0ad7e8..2bf8405 100644
---- a/docs/man/htpasswd.1
-+++ b/docs/man/htpasswd.1
-@@ -27,16 +27,16 @@ htpasswd \- Manage user files for basic authentication
+--- httpd-2.4.43/docs/man/htpasswd.1.r1861793+
++++ httpd-2.4.43/docs/man/htpasswd.1
+@@ -27,16 +27,16 @@
  .SH "SYNOPSIS"
   
  .PP
@@ -56,7 +54,7 @@ index d0ad7e8..2bf8405 100644
   
  
  .SH "SUMMARY"
-@@ -48,7 +48,7 @@ htpasswd \- Manage user files for basic authentication
+@@ -48,7 +48,7 @@
  Resources available from the Apache HTTP server can be restricted to just the users listed in the files created by \fBhtpasswd\fR\&. This program can only manage usernames and passwords stored in a flat-file\&. It can encrypt and display password information for use in other types of data stores, though\&. To use a DBM database see dbmmanage or htdbm\&.
   
  .PP
@@ -65,7 +63,7 @@ index d0ad7e8..2bf8405 100644
   
  .PP
  This manual page only lists the command line arguments\&. For details of the directives necessary to configure user authentication in httpd see the Apache manual, which is part of the Apache distribution or can be found at http://httpd\&.apache\&.org/\&.
-@@ -73,17 +73,26 @@ Display the results on standard output rather than updating a file\&. This is us
+@@ -73,17 +73,26 @@
  \fB-m\fR
  Use MD5 encryption for passwords\&. This is the default (since version 2\&.2\&.18)\&.  
  .TP
@@ -93,7 +91,7 @@ index d0ad7e8..2bf8405 100644
  .TP
  \fB-p\fR
  Use plaintext passwords\&. Though \fBhtpasswd\fR will support creation on all platforms, the httpd daemon will only accept plain text passwords on Windows and Netware\&.  
-@@ -152,10 +161,13 @@ The use of the \fB-b\fR option is discouraged, since when it is used the unencry
+@@ -152,10 +161,13 @@
  When using the \fBcrypt()\fR algorithm, note that only the first 8 characters of the password are used to form the password\&. If the supplied password is longer, the extra characters will be silently discarded\&.
   
  .PP
@@ -109,18 +107,16 @@ index d0ad7e8..2bf8405 100644
   
  .SH "RESTRICTIONS"
   
-diff --git a/support/htpasswd.c b/support/htpasswd.c
-index 73b291d..7366dcb 100644
---- a/support/htpasswd.c
-+++ b/support/htpasswd.c
-@@ -109,17 +109,21 @@ static void usage(void)
+--- httpd-2.4.43/support/htpasswd.c.r1861793+
++++ httpd-2.4.43/support/htpasswd.c
+@@ -109,17 +109,21 @@
              "for it." NL
          " -i  Read password from stdin without verification (for script usage)." NL
          " -m  Force MD5 encryption of the password (default)." NL
 -        " -B  Force bcrypt encryption of the password (very secure)." NL
 +        " -2  Force SHA-256 crypt() hash of the password (very secure)." NL
 +        " -5  Force SHA-512 crypt() hash of the password (very secure)." NL
-+        " -B  Force bcrypt aencryption of the password (very secure)." NL
++        " -B  Force bcrypt encryption of the password (very secure)." NL
          " -C  Set the computing time used for the bcrypt algorithm" NL
          "     (higher is more secure but slower, default: %d, valid: 4 to 17)." NL
 +        " -r  Set the number of rounds used for the SHA-256, SHA-512 algorithms" NL
@@ -138,7 +134,7 @@ index 73b291d..7366dcb 100644
              "MD5 algorithm." NL,
          BCRYPT_DEFAULT_COST
      );
-@@ -178,7 +182,7 @@ static void check_args(int argc, const char *const argv[],
+@@ -178,7 +182,7 @@
      if (rv != APR_SUCCESS)
          exit(ERR_SYNTAX);
  
@@ -147,11 +143,16 @@ index 73b291d..7366dcb 100644
          switch (opt) {
          case 'c':
              *mask |= APHTP_NEWFILE;
-diff --git a/support/passwd_common.c b/support/passwd_common.c
-index 664e509..d45657c 100644
---- a/support/passwd_common.c
-+++ b/support/passwd_common.c
-@@ -185,10 +185,15 @@ int mkhash(struct passwd_ctx *ctx)
+--- httpd-2.4.43/support/passwd_common.c.r1861793+
++++ httpd-2.4.43/support/passwd_common.c
+@@ -179,16 +179,21 @@
+ int mkhash(struct passwd_ctx *ctx)
+ {
+     char *pw;
+-    char salt[16];
++    char salt[17];
+     apr_status_t rv;
+     int ret = 0;
  #if CRYPT_ALGO_SUPPORTED
      char *cbuf;
  #endif
@@ -169,7 +170,7 @@ index 664e509..d45657c 100644
      }
  
      if (ctx->passwd == NULL) {
-@@ -246,6 +251,34 @@ int mkhash(struct passwd_ctx *ctx)
+@@ -246,6 +251,34 @@
          break;
  #endif /* CRYPT_ALGO_SUPPORTED */
  
@@ -204,7 +205,7 @@ index 664e509..d45657c 100644
  #if BCRYPT_ALGO_SUPPORTED
      case ALG_BCRYPT:
          rv = apr_generate_random_bytes((unsigned char*)salt, 16);
-@@ -294,6 +327,19 @@ int parse_common_options(struct passwd_ctx *ctx, char opt,
+@@ -294,6 +327,19 @@
      case 's':
          ctx->alg = ALG_APSHA;
          break;
@@ -224,7 +225,7 @@ index 664e509..d45657c 100644
      case 'p':
          ctx->alg = ALG_PLAIN;
  #if !PLAIN_ALGO_SUPPORTED
-@@ -324,11 +370,12 @@ int parse_common_options(struct passwd_ctx *ctx, char opt,
+@@ -324,11 +370,12 @@
          return ERR_ALG_NOT_SUPP;
  #endif
          break;
@@ -239,10 +240,8 @@ index 664e509..d45657c 100644
                  return ERR_SYNTAX;
              }
              ctx->cost = num;
-diff --git a/support/passwd_common.h b/support/passwd_common.h
-index 660081e..f1b3cd7 100644
---- a/support/passwd_common.h
-+++ b/support/passwd_common.h
+--- httpd-2.4.43/support/passwd_common.h.r1861793+
++++ httpd-2.4.43/support/passwd_common.h
 @@ -28,6 +28,8 @@
  #include "apu_version.h"
  #endif
@@ -261,7 +260,7 @@ index 660081e..f1b3cd7 100644
  
  #define BCRYPT_DEFAULT_COST 5
  
-@@ -84,7 +88,7 @@ struct passwd_ctx {
+@@ -84,7 +88,7 @@
      apr_size_t      out_len;
      char            *passwd;
      int             alg;

@@ -266,9 +266,9 @@ Wants=network-online.target</programlisting>
     <refsect2>
       <title>Instantiated services</title>
 
-      <para>The <command>httpd@.service</command> unit is an
-      instantiated template service. An instance of this unit will be
-      started using the configuration file
+      <para>The <command>httpd@.service</command> unit is a template
+      for creating instantiated services. An instance of this unit
+      will be started using the configuration file
       <filename>/etc/httpd/conf/INSTANCE.conf</filename>, where
       <emphasis>INSTANCE</emphasis> is replaced with the instance
       name.  For example, <command>systemctl start
@@ -286,7 +286,7 @@ Wants=network-online.target</programlisting>
       paths, and <command>Listen</command> to choose different ports.
       The example configuration file
       <filename>/usr/share/doc/httpd/instance.conf</filename>
-      demonstrates how to make such changes using
+      demonstrates how to make such changes using the
       <option>HTTPD_INSTANCE</option> variable.</para>
 
       <para>It can be useful to configure instances of

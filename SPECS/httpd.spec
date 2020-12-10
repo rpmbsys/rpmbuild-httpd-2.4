@@ -22,7 +22,7 @@
 
 Summary: Apache HTTP Server
 Name: httpd
-Version: 2.4.43
+Version: 2.4.46
 Release: %{rpmrel}%{?dist}
 URL: https://httpd.apache.org/
 Source0: https://www.apache.org/dist/httpd/httpd-%{version}.tar.bz2
@@ -66,9 +66,11 @@ Patch18: httpd-2.4.25-httpd-libs.patch
 Patch19: httpd-2.4.43-detect-systemd.patch
 # Features/functional changes
 Patch21: httpd-2.4.43-r1842929+.patch
+Patch22: httpd-2.4.43-mod_systemd.patch
 Patch23: httpd-2.4.43-export.patch
 Patch24: httpd-2.4.43-corelimit.patch
 Patch25: httpd-2.4.43-selinux.patch
+Patch26: httpd-2.4.43-gettid.patch
 Patch27: httpd-2.4.43-icons.patch
 Patch30: httpd-2.4.43-cachehardmax.patch
 Patch31: httpd-2.4.43-sslmultiproxy.patch
@@ -78,15 +80,17 @@ Patch39: httpd-2.4.43-sslprotdefault.patch
 Patch40: httpd-2.4.43-r1861269.patch
 Patch41: httpd-2.4.43-r1861793+.patch
 Patch42: httpd-2.4.43-r1828172+.patch
+Patch43: httpd-2.4.43-sslcoalesce.patch
+Patch44: httpd-2.4.46-lua-resume.patch
 
 # ulimit to apachectl
-Patch43: httpd-2.4.27-apct2.patch
+Patch53: httpd-2.4.27-apct2.patch
 # compile apache statically with apr and apr-util
-Patch44: httpd-2.4.27-static.patch
+Patch54: httpd-2.4.27-static.patch
 # compile apache with bundled APR and APR-Util
-Patch45: httpd-2.4.27-apr.patch
+Patch55: httpd-2.4.27-apr.patch
 # Set POSIX Semaphores as default
-Patch46: httpd-2.4.41-sem.patch
+Patch56: httpd-2.4.41-sem.patch
 
 # Bug fixes
 # https://bugzilla.redhat.com/show_bug.cgi?id=1397243
@@ -228,9 +232,11 @@ mv apr-util-%{apuver} srclib/apr-util
 %endif
 
 %patch21 -p1 -b .r1842929+
+%patch22 -p1 -b .mod_systemd
 %patch23 -p1 -b .export
 %patch24 -p1 -b .corelimit
 %patch25 -p1 -b .selinux
+%patch26 -p1 -b .gettid
 %patch27 -p1 -b .icons
 
 %patch30 -p1 -b .cachehardmax
@@ -245,11 +251,13 @@ mv apr-util-%{apuver} srclib/apr-util
 %patch40 -p1 -b .r1861269
 %patch41 -p1 -b .r1861793+
 %patch42 -p1 -b .r1828172+
+%patch43 -p1 -b .sslcoalesce
+%patch44 -p1 -b .luaresume
 
-%patch43 -p1 -b .apct2
-%patch44 -p1 -b .static
-%patch45 -p1 -b .apr
-%patch46 -p1 -b .sem
+%patch53 -p1 -b .apct2
+%patch54 -p1 -b .static
+%patch55 -p1 -b .apr
+%patch56 -p1 -b .sem
 
 %patch60 -p1 -b .enable-sslv3
 %patch62 -p1 -b .r1870095
@@ -620,19 +628,6 @@ fi
 %systemd_postun httpd.service htcacheclean.service httpd.socket
 %endif
 
-# Trigger for conversion from SysV, per guidelines at:
-# https://fedoraproject.org/wiki/Packaging:ScriptletSnippets#Systemd
-%triggerun -- httpd < 2.2.21-5
-# Save the current service runlevel info
-# User must manually run systemd-sysv-convert --apply httpd
-# to migrate them to systemd targets
-%if 0%{?rhel} >= 7
-/usr/bin/systemd-sysv-convert --save httpd.service >/dev/null 2>&1 ||:
-
-# Run these because the SysV package being removed won't do them
-/sbin/chkconfig --del httpd >/dev/null 2>&1 || :
-%endif
-
 # disabled while SysV not configured
 %posttrans
 %if 0%{?rhel} >= 7
@@ -784,6 +779,27 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %changelog
+* Tue Aug 25 2020 Lubos Uhliarik <luhliari@redhat.com> - 2.4.46-1
+- new version 2.4.46
+- remove obsolete parts of this spec file
+- fix systemd detection patch
+
+* Thu Jul  9 2020 Lubos Uhliarik <luhliari@redhat.com> - 2.4.43-6
+- fix macro in mod_lua for lua 4.5
+
+* Thu Jul  9 2020 Lubos Uhliarik <luhliari@redhat.com> - 2.4.43-5
+- Remove %ghosted /etc/sysconfig/httpd file (#1850082)
+
+* Tue Jul  7 2020 Joe Orton <jorton@redhat.com> - 2.4.43-4
+- use gettid() directly and use it for built-in ErrorLogFormat
+
+* Fri Apr 17 2020 Joe Orton <jorton@redhat.com> - 2.4.43-3
+- mod_ssl: updated coalescing filter to improve TLS efficiency
+
+* Fri Apr 17 2020 Joe Orton <jorton@redhat.com> - 2.4.43-2
+- mod_ssl: fix leak in OCSP stapling code (PR 63687, r1876548)
+- mod_systemd: restore descriptive startup logging
+
 * Tue Mar 31 2020 Lubos Uhliarik <luhliari@redhat.com> - 2.4.43-1
 - new version 2.4.43 (#1819023)
 
@@ -811,7 +827,7 @@ rm -rf $RPM_BUILD_ROOT
 * Wed Oct  2 2019 Joe Orton <jorton@redhat.com> - 2.4.41-4
 - mod_cgid: possible stdout timeout handling fix (#1757683)
 
-* Fri Dec  6 2019 Alexander Ursu <alexander.ursu@gmail.com> - 2.4.41-3
+* Wed Oct  2 2019 Alexander Ursu <alexander.ursu@gmail.com> - 2.4.41-3
 - enable SSL/EVP support for included APR
 
 * Thu Aug 15 2019 Alexander Ursu <alexander.ursu@gmail.com> - 2.4.41-2
@@ -820,10 +836,10 @@ rm -rf $RPM_BUILD_ROOT
 * Thu Aug 15 2019 Joe Orton <jorton@redhat.com> - 2.4.41-1
 - update to 2.4.41
 
-* Thu Apr 04 2019 Alexander Ursu <alexander.ursu@gmail.com> - 2.4.39-3
+* Thu Apr  4 2019 Alexander Ursu <alexander.ursu@gmail.com> - 2.4.39-3
 - upgrade APR to version 1.6.5
 
-* Tue Apr 02 2019 Lubos Uhliarik <luhliari@redhat.com> - 2.4.39-1
+* Tue Apr  2 2019 Lubos Uhliarik <luhliari@redhat.com> - 2.4.39-1
 - update to 2.4.39
 
 * Thu Feb 28 2019 Joe Orton <jorton@redhat.com> - 2.4.38-6
@@ -833,13 +849,13 @@ rm -rf $RPM_BUILD_ROOT
  * implement graceful&graceful-stop by signal directly
 - run "httpd -t" from legacy action script
 
-* Tue Feb 05 2019 Lubos Uhliarik <luhliari@redhat.com> - 2.4.38-5
+* Tue Feb  5 2019 Lubos Uhliarik <luhliari@redhat.com> - 2.4.38-5
 - segmentation fault fix (FIPS)
 
 * Tue Feb  5 2019 Joe Orton <jorton@redhat.com> - 2.4.38-4
 - use serverroot-relative statedir, rundir by default
 
-* Fri Feb 01 2019 Fedora Release Engineering <releng@fedoraproject.org> - 2.4.38-3
+* Fri Feb  1 2019 Fedora Release Engineering <releng@fedoraproject.org> - 2.4.38-3
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_30_Mass_Rebuild
 
 * Wed Jan 23 2019 Lubos Uhliarik <luhliari@redhat.com> - 2.4.38-2
@@ -854,7 +870,7 @@ rm -rf $RPM_BUILD_ROOT
 * Thu Nov  8 2018 Joe Orton <jorton@redhat.com> - 2.4.37-4
 - add httpd.conf(5) (#1611361)
 
-* Wed Nov 07 2018 Luboš Uhliarik <luhliari@redhat.com> - 2.4.37-3
+* Wed Nov  7 2018 Luboš Uhliarik <luhliari@redhat.com> - 2.4.37-3
 - Resolves: #1647241 - fix apachectl script
 
 * Wed Oct 31 2018 Joe Orton <jorton@redhat.com> - 2.4.37-2
