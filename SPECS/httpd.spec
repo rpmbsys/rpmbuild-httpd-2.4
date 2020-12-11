@@ -664,6 +664,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %dir %{_sysconfdir}/httpd/conf.modules.d
 %{_sysconfdir}/httpd/conf.modules.d/README
+%{_sysconfdir}/httpd/conf.modules.d/00-mpm.conf
 
 %config(noreplace) %{_sysconfdir}/sysconfig/htcacheclean
 %config(noreplace) %{_sysconfdir}/sysconfig/httpd
