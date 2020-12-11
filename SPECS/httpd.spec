@@ -35,6 +35,7 @@ Source8: action-graceful.sh
 Source9: action-configtest.sh
 Source10: server-status.conf
 Source11: httpd.conf
+Source13: 00-mpm.conf
 Source18: 00-ssl.conf
 Source22: 05-ssl.conf
 Source27: 10-listen443.conf
@@ -293,7 +294,8 @@ xmlto man $RPM_SOURCE_DIR/httpd.service.xml
 # apachectl.xml => apachectl.8
 xmlto man %{SOURCE47}
 
-: Building with MMN %{mmn}, MMN-ISA %{mmnisa} and vendor string '%{vstring}'
+: Building with MMN %{mmn}, MMN-ISA %{mmnisa}
+: Default MPM is %{mpm}, vendor string is '%{vstring}'
 
 %build
 # reconfigure to enable wired minds module
@@ -333,7 +335,7 @@ export LYNX_PATH=/usr/bin/links
     --datadir=%{contentdir} \
     --enable-layout=Fedora \
     --with-installbuilddir=%{_libdir}/httpd/build \
-    --with-mpm=%{mpm} \
+    --enable-mpms-shared=all \
     --with-pcre \
     --enable-pie \
     --with-included-apr \
@@ -400,10 +402,15 @@ install -m 644 $RPM_SOURCE_DIR/README.confd \
 install -m 644 $RPM_SOURCE_DIR/README.confmod \
     $RPM_BUILD_ROOT%{_sysconfdir}/httpd/conf.modules.d/README
 for f in \
-    00-ssl.conf; do
+    00-mpm.conf 00-ssl.conf; do
     install -m 644 -p $RPM_SOURCE_DIR/$f \
         $RPM_BUILD_ROOT%{_sysconfdir}/httpd/conf.modules.d/$f
 done
+
+sed -i '/^#LoadModule mpm_%{mpm}_module /s/^#//' \
+     $RPM_BUILD_ROOT%{_sysconfdir}/httpd/conf.modules.d/00-mpm.conf
+touch -r $RPM_SOURCE_DIR/00-mpm.conf \
+     $RPM_BUILD_ROOT%{_sysconfdir}/httpd/conf.modules.d/00-mpm.conf
 
 %if 0%{?rhel} >= 7
 # install systemd override drop directory
@@ -674,6 +681,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %dir %{_libdir}/httpd
 %dir %{_libdir}/httpd/modules
+%{_libdir}/httpd/modules/mod_mpm_*.so
 
 %dir %{contentdir}/error
 %dir %{contentdir}/error/include
@@ -779,6 +787,10 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %changelog
+* Fri Dec 11 2020 Alexander Ursu <alexander.ursu@gmail.com> - 2.4.46-2
+- added MPM event and worker
+- made MPM prefork shared
+
 * Tue Aug 25 2020 Lubos Uhliarik <luhliari@redhat.com> - 2.4.46-1
 - new version 2.4.46
 - remove obsolete parts of this spec file
