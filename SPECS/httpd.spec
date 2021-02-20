@@ -18,7 +18,7 @@
 
 # https://github.com/rpm-software-management/rpm/blob/master/doc/manual/conditionalbuilds
 
-%global rpmrel 2
+%global rpmrel 9
 
 Summary: Apache HTTP Server
 Name: httpd
@@ -83,6 +83,7 @@ Patch41: httpd-2.4.43-r1861793+.patch
 Patch42: httpd-2.4.43-r1828172+.patch
 Patch43: httpd-2.4.43-sslcoalesce.patch
 Patch44: httpd-2.4.46-lua-resume.patch
+Patch45: httpd-2.4.43-logjournal.patch
 
 # ulimit to apachectl
 Patch53: httpd-2.4.27-apct2.patch
@@ -97,6 +98,7 @@ Patch56: httpd-2.4.41-sem.patch
 # https://bugzilla.redhat.com/show_bug.cgi?id=1397243
 Patch60: httpd-2.4.43-enable-sslv3.patch
 Patch62: httpd-2.4.43-r1870095+.patch
+Patch63: httpd-2.4.46-htcacheclean-dont-break.patch
 
 # Security fixes
 
@@ -203,7 +205,7 @@ Requires(pre): httpd-filesystem
 Requires: httpd = 0:%{version}-%{release}, httpd-mmn = %{mmnisa}
 
 %description -n mod_ssl
-The mod_ssl module provides strong cryptography for the Apache Web
+The mod_ssl module provides strong cryptography for the Apache HTTP
 server via the Secure Sockets Layer (SSL) and Transport Layer
 Security (TLS) protocols.
 
@@ -254,6 +256,7 @@ mv apr-util-%{apuver} srclib/apr-util
 %patch42 -p1 -b .r1828172+
 %patch43 -p1 -b .sslcoalesce
 %patch44 -p1 -b .luaresume
+%patch45 -p1 -b .logjournal
 
 %patch53 -p1 -b .apct2
 %patch54 -p1 -b .static
@@ -262,6 +265,7 @@ mv apr-util-%{apuver} srclib/apr-util
 
 %patch60 -p1 -b .enable-sslv3
 %patch62 -p1 -b .r1870095
+%patch63 -p1 -b .htcacheclean-dont-break
 
 # Patch in the vendor string
 sed -i '/^#define PLATFORM/s/Unix/%{vstring}/' os/unix/os.h
@@ -485,11 +489,12 @@ echo %{mmnisa} > $RPM_BUILD_ROOT%{_includedir}/httpd/.mmn
 
 cat > macros.httpd <<EOF
 %%_httpd_mmn %{mmnisa}
-%%_httpd_apxs %%{_bindir}/apxs
+%%_httpd_apxs %%{_libdir}/httpd/build/vendor-apxs
 %%_httpd_modconfdir %%{_sysconfdir}/httpd/conf.modules.d
 %%_httpd_confdir %%{_sysconfdir}/httpd/conf.d
 %%_httpd_contentdir %{contentdir}
 %%_httpd_moddir %%{_libdir}/httpd/modules
+%%_httpd_requires Requires: httpd-mmn = %%{_httpd_mmn}
 EOF
 
 %if 0%{?rhel} >= 7
@@ -592,6 +597,23 @@ sed -i '/.*DEFAULT_..._LIBEXECDIR/d;/DEFAULT_..._INSTALLBUILDDIR/d' \
 # Fix path to instdso in special.mk
 sed -i '/instdso/s,top_srcdir,top_builddir,' \
     $RPM_BUILD_ROOT%{_libdir}/httpd/build/special.mk
+
+# vendor-apxs uses an unsanitized config_vars.mk which may
+# have dependencies on redhat-rpm-config.  apxs uses the
+# config_vars.mk with a sanitized config_vars.mk
+cp -p $RPM_BUILD_ROOT%{_libdir}/httpd/build/config_vars.mk \
+      $RPM_BUILD_ROOT%{_libdir}/httpd/build/vendor_config_vars.mk
+
+# Sanitize CFLAGS in standard config_vars.mk
+sed '/^CFLAGS/s,=.*$,= -O2 -g -Wall,' \
+    -i $RPM_BUILD_ROOT%{_libdir}/httpd/build/config_vars.mk
+
+sed 's/config_vars.mk/vendor_config_vars.mk/' \
+    $RPM_BUILD_ROOT%{_bindir}/apxs \
+    > $RPM_BUILD_ROOT%{_libdir}/httpd/build/vendor-apxs
+touch -r $RPM_BUILD_ROOT%{_bindir}/apxs \
+      $RPM_BUILD_ROOT%{_libdir}/httpd/build/vendor-apxs
+chmod 755 $RPM_BUILD_ROOT%{_libdir}/httpd/build/vendor-apxs
 
 # Remove unpackaged files
 rm -vf \
@@ -781,6 +803,7 @@ rm -rf $RPM_BUILD_ROOT
 %dir %{_libdir}/httpd/build
 %{_libdir}/httpd/build/*.mk
 %{_libdir}/httpd/build/*.sh
+%{_libdir}/httpd/build/vendor-apxs
 %if 0%{?rhel} >= 7
 %{_rpmconfigdir}/macros.d/macros.httpd
 %else
@@ -788,7 +811,22 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %changelog
-* Fri Dec 11 2020 Alexander Ursu <alexander.ursu@gmail.com> - 2.4.46-2
+* Mon Feb 01 2021 Lubos Uhliarik <luhliari@redhat.com> - 2.4.46-9
+- Resolves: #1914182 - RFE: CustomLog should be able to use journald
+
+* Wed Jan 20 2021 Artem Egorenkov <aegorenk@redhat.com> - 2.4.46-7
+- prevent htcacheclean from while break when first file processed
+
+* Fri Nov  6 2020 Joe Orton <jorton@redhat.com> - 2.4.46-5
+- add %%_httpd_requires to macros
+
+* Thu Aug 27 2020 Joe Orton <jorton@redhat.com> - 2.4.46-3
+- strip /usr/bin/apxs CFLAGS further
+
+* Thu Aug 27 2020 Joe Orton <jorton@redhat.com> - 2.4.46-2
+- sanitize CFLAGS used by /usr/bin/apxs by default (#1873020)
+- add $libdir/httpd/build/vendor-apxs which exposes full CFLAGS
+- redefine _httpd_apxs RPM macro to use vendor-apxs
 - added MPM event and worker
 - made MPM prefork shared
 
