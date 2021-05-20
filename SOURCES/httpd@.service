@@ -20,6 +20,7 @@ ExecReload=/usr/sbin/httpd $OPTIONS -k graceful -f conf/%i.conf
 KillSignal=SIGWINCH
 KillMode=mixed
 PrivateTmp=true
+OOMPolicy=continue
 
 [Install]
 WantedBy=multi-user.target

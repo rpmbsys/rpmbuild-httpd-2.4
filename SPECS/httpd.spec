@@ -18,7 +18,7 @@
 
 # https://github.com/rpm-software-management/rpm/blob/master/doc/manual/conditionalbuilds
 
-%global rpmrel 9
+%global rpmrel 13
 
 Summary: Apache HTTP Server
 Name: httpd
@@ -54,6 +54,7 @@ Source44: httpd@.service
 Source45: config.layout
 Source46: apachectl.sh
 Source47: apachectl.xml
+Source48: apache-poweredby.png
 
 # build/scripts patches
 Patch1: httpd-2.4.1-apctl.patch
@@ -74,7 +75,6 @@ Patch25: httpd-2.4.43-selinux.patch
 Patch26: httpd-2.4.43-gettid.patch
 Patch27: httpd-2.4.43-icons.patch
 Patch30: httpd-2.4.43-cachehardmax.patch
-Patch31: httpd-2.4.43-sslmultiproxy.patch
 Patch34: httpd-2.4.43-socket-activation.patch
 Patch38: httpd-2.4.43-sslciphdefault.patch
 Patch39: httpd-2.4.43-sslprotdefault.patch
@@ -97,6 +97,7 @@ Patch56: httpd-2.4.41-sem.patch
 # Bug fixes
 # https://bugzilla.redhat.com/show_bug.cgi?id=1397243
 Patch60: httpd-2.4.43-enable-sslv3.patch
+Patch61: httpd-2.4.46-r1878890.patch
 Patch62: httpd-2.4.43-r1870095+.patch
 Patch63: httpd-2.4.46-htcacheclean-dont-break.patch
 
@@ -203,6 +204,8 @@ Epoch: 1
 BuildRequires: openssl-devel
 Requires(pre): httpd-filesystem
 Requires: httpd = 0:%{version}-%{release}, httpd-mmn = %{mmnisa}
+# mod_ssl/mod_nss cannot both be loaded simultaneously
+Conflicts: mod_nss
 
 %description -n mod_ssl
 The mod_ssl module provides strong cryptography for the Apache HTTP
@@ -243,7 +246,6 @@ mv apr-util-%{apuver} srclib/apr-util
 %patch27 -p1 -b .icons
 
 %patch30 -p1 -b .cachehardmax
-#patch31 -p1 -b .sslmultiproxy
 
 %if 0%{?rhel} >= 7
 %patch34 -p1 -b .socketactivation
@@ -264,6 +266,7 @@ mv apr-util-%{apuver} srclib/apr-util
 %patch56 -p1 -b .sem
 
 %patch60 -p1 -b .enable-sslv3
+%patch61 -p1 -b .r1878890
 %patch62 -p1 -b .r1870095
 %patch63 -p1 -b .htcacheclean-dont-break
 
@@ -279,6 +282,9 @@ if test "x${vmmn}" != "x%{mmn}"; then
    : Update the mmn macro and rebuild.
    exit 1
 fi
+
+# A new logo which comes together with a new test page
+cp %{SOURCE48} ./docs/icons/apache_pb3.png
 
 # Provide default layout
 cp $RPM_SOURCE_DIR/config.layout .
@@ -511,8 +517,8 @@ install -m 644 -c macros.httpd \
 # Handle contentdir
 mkdir $RPM_BUILD_ROOT%{contentdir}/noindex \
       $RPM_BUILD_ROOT%{contentdir}/server-status
-install -m 644 -p $RPM_SOURCE_DIR/index.html \
-        $RPM_BUILD_ROOT%{contentdir}/noindex/index.html
+ln -s ../../testpage/index.html \
+       $RPM_BUILD_ROOT%{contentdir}/noindex/index.html
 install -m 644 -p docs/server-status/* \
         $RPM_BUILD_ROOT%{contentdir}/server-status
 rm -rf $RPM_BUILD_ROOT%{contentdir}/htdocs
@@ -811,6 +817,16 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %changelog
+* Mon May 03 2021 Lubos Uhliarik <luhliari@redhat.com> - 2.4.46-13
+- Related: #1934739 - Apache trademark update - new logo
+
+* Fri Apr  9 2021 Joe Orton <jorton@redhat.com> - 2.4.46-12
+- use OOMPolicy=continue in httpd.service, httpd@.service (#1947475)
+
+* Tue Feb 23 2021 Joe Orton <jorton@redhat.com> - 2.4.46-10
+- add Conflicts: with mod_nss
+- drop use of apr_ldap_rebind (r1878890, #1847585)
+
 * Mon Feb 01 2021 Lubos Uhliarik <luhliari@redhat.com> - 2.4.46-9
 - Resolves: #1914182 - RFE: CustomLog should be able to use journald
 

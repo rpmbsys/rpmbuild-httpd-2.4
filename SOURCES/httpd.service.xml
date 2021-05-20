@@ -209,15 +209,34 @@ Wants=network-online.target</programlisting>
       types. See
       <citerefentry><refentrytitle>httpd_selinux</refentrytitle><manvolnum>8</manvolnum></citerefentry>
       for more information.</para>
+    </refsect2>
 
-      <para>The httpd service enables <emphasis>PrivateTmp</emphasis>
-      by default. The <filename>/tmp</filename> and
-      <filename>/var/tmp</filename> directories available within the
-      httpd process (and CGI scripts, etc) are not shared by other
-      processes. See
+    <refsect2>
+      <title>Process policies and restrictions</title>
+
+      <para>The httpd service uses the following options:
+
+      <itemizedlist>
+        <listitem><para><emphasis>PrivateTmp</emphasis> is enabled by
+        default. The <filename>/tmp</filename> and
+        <filename>/var/tmp</filename> directories available within the
+        httpd process (and CGI scripts, etc) are not shared by other
+        processes.</para></listitem>
+
+        <listitem><para><emphasis>OOMPolicy</emphasis> is set to
+        <emphasis>continue</emphasis> by default.  Under the default
+        Out-of-Memory policy, the entire service will be terminated if
+        any process is killed by the kernel OOM killer.  By setting
+        the policy to <emphasis>continue</emphasis>, httpd will
+        continue to run (and recover) if a single child is terminated
+        because of excess memory consumption.</para></listitem>
+      </itemizedlist>
+
+      See
       <citerefentry><refentrytitle>systemd.exec</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+      and
+      <citerefentry><refentrytitle>systemd.service</refentrytitle><manvolnum>5</manvolnum></citerefentry>
       for more information.</para>
-
     </refsect2>
 
     <refsect2>
