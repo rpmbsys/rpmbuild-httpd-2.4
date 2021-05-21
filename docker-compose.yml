@@ -1,14 +1,5 @@
 version: "3.4"
 services:
-  centos6ap24build:
-    volumes:
-      - rpms:/home/centos/rpmbuild/SRPMS
-      - rpm6:/home/centos/rpmbuild/RPMS
-    build:
-      context: .
-      dockerfile: Dockerfile.el6
-      args:
-        centos: $OS6
   centos7ap24build:
     volumes:
       - rpms:/home/centos/rpmbuild/SRPMS
@@ -21,7 +12,5 @@ services:
 volumes:
   rpms:
     name: rpms
-  rpm6:
-    name: rpm6
   rpm7:
     name: rpm7

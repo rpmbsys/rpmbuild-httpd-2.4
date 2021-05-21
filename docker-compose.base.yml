@@ -1,12 +1,5 @@
 version: "3.4"
 services:
-  centos6ap24base:
-    build:
-      context: .
-      dockerfile: Dockerfile.6-base
-      args:
-        centos: $OS6
-    image: aursu/ap24build:${OS6}-base
   centos7ap24base:
     build:
       context: .
