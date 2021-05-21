@@ -18,7 +18,7 @@
 
 # https://github.com/rpm-software-management/rpm/blob/master/doc/manual/conditionalbuilds
 
-%global rpmrel 13
+%global rpmrel 14
 
 Summary: Apache HTTP Server
 Name: httpd
@@ -86,13 +86,16 @@ Patch44: httpd-2.4.46-lua-resume.patch
 Patch45: httpd-2.4.43-logjournal.patch
 
 # ulimit to apachectl
-Patch53: httpd-2.4.27-apct2.patch
+Patch50: httpd-2.4.27-apct2.patch
 # compile apache statically with apr and apr-util
-Patch54: httpd-2.4.27-static.patch
+Patch51: httpd-2.4.27-static.patch
 # compile apache with bundled APR and APR-Util
-Patch55: httpd-2.4.27-apr.patch
+Patch52: httpd-2.4.27-apr.patch
 # Set POSIX Semaphores as default
-Patch56: httpd-2.4.41-sem.patch
+Patch53: httpd-2.4.41-sem.patch
+# mod_rpaf
+Patch55: httpd-2.4.39-modremoteip-rpaf.patch
+Patch56: httpd-2.4.39-modremoteip-ssl.patch
 
 # Bug fixes
 # https://bugzilla.redhat.com/show_bug.cgi?id=1397243
@@ -260,10 +263,12 @@ mv apr-util-%{apuver} srclib/apr-util
 %patch44 -p1 -b .luaresume
 %patch45 -p1 -b .logjournal
 
-%patch53 -p1 -b .apct2
-%patch54 -p1 -b .static
-%patch55 -p1 -b .apr
-%patch56 -p1 -b .sem
+%patch50 -p1 -b .apct2
+%patch51 -p1 -b .static
+%patch52 -p1 -b .apr
+%patch53 -p1 -b .sem
+%patch55 -p1 -b .rpaf
+%patch56 -p1 -b .rpaf
 
 %patch60 -p1 -b .enable-sslv3
 %patch61 -p1 -b .r1878890
@@ -817,6 +822,9 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %changelog
+* Fri May 21 2021 Alexander Ursu <alexander.ursu@gmail.com> - 2.4.46-14
+- added rpaf patches for remoteip module
+
 * Mon May 03 2021 Lubos Uhliarik <luhliari@redhat.com> - 2.4.46-13
 - Related: #1934739 - Apache trademark update - new logo
 
