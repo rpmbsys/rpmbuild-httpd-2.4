@@ -5,7 +5,7 @@ jobs:
       image: ubuntu-1604:201903-01
     environment:
       BINTRAY_REPO: custom
-      PACKAGE_VCS_URL: https://github.com/aursu/rpmbuild-httpd-2.4
+      ARTIFACTORY_URL=https://rpmb.jfrog.io
     steps:
       - checkout
       - run:
@@ -33,10 +33,5 @@ jobs:
               -e BINTRAY_USER=$BINTRAY_USER \
               -e BINTRAY_API_KEY=$BINTRAY_API_KEY \
               -e BINTRAY_REPO=$BINTRAY_REPO \
-              -e PACKAGE_VCS_URL=$PACKAGE_VCS_URL centos6bintray
-            docker-compose -f rpmbuild/docker-compose.bintray.yml run --rm \
-              -e BINTRAY_USER=$BINTRAY_USER \
-              -e BINTRAY_API_KEY=$BINTRAY_API_KEY \
-              -e BINTRAY_REPO=$BINTRAY_REPO \
-              -e PACKAGE_VCS_URL=$PACKAGE_VCS_URL centos7bintray
+              -e ARTIFACTORY_URL=$ARTIFACTORY_URL centos7bintray
 
