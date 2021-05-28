@@ -5,7 +5,7 @@ jobs:
       image: ubuntu-1604:201903-01
     environment:
       BINTRAY_REPO: custom
-      ARTIFACTORY_URL=https://rpmb.jfrog.io
+      ARTIFACTORY_URL: https://rpmb.jfrog.io
     steps:
       - checkout
       - run:
