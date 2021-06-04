@@ -1,6 +1,6 @@
 version: "3.4"
 services:
-  centos7ap24build:
+  centos7build:
     volumes:
       - rpms:/home/centos/rpmbuild/SRPMS
       - rpm7:/home/centos/rpmbuild/RPMS

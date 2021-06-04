@@ -1,6 +1,6 @@
 version: "3.4"
 services:
-  centos7ap24base:
+  centos7base:
     build:
       context: .
       dockerfile: Dockerfile.base

@@ -3,6 +3,9 @@
 %define mmn 20120211
 %define mmnisa %{mmn}%{__isa_name}%{__isa_bits}
 
+%define _debugsource_template %{nil}
+%define debug_package %{nil}
+
 %if 0%{?rhel} >= 7
 %define vstring %(source /etc/os-release; echo ${REDHAT_SUPPORT_PRODUCT})
 %else
@@ -18,11 +21,11 @@
 
 # https://github.com/rpm-software-management/rpm/blob/master/doc/manual/conditionalbuilds
 
-%global rpmrel 14
+%global rpmrel 1
 
 Summary: Apache HTTP Server
 Name: httpd
-Version: 2.4.46
+Version: 2.4.48
 Release: %{rpmrel}%{?dist}
 URL: https://httpd.apache.org/
 Source0: https://www.apache.org/dist/httpd/httpd-%{version}.tar.bz2
@@ -67,9 +70,9 @@ Patch18: httpd-2.4.25-httpd-libs.patch
 # Needed for socket activation and mod_systemd patch
 Patch19: httpd-2.4.43-detect-systemd.patch
 # Features/functional changes
-Patch21: httpd-2.4.43-r1842929+.patch
+Patch21: httpd-2.4.48-r1842929+.patch
 Patch22: httpd-2.4.43-mod_systemd.patch
-Patch23: httpd-2.4.43-export.patch
+Patch23: httpd-2.4.48-export.patch
 Patch24: httpd-2.4.43-corelimit.patch
 Patch25: httpd-2.4.43-selinux.patch
 Patch26: httpd-2.4.43-gettid.patch
@@ -81,8 +84,6 @@ Patch39: httpd-2.4.43-sslprotdefault.patch
 Patch40: httpd-2.4.43-r1861269.patch
 Patch41: httpd-2.4.43-r1861793+.patch
 Patch42: httpd-2.4.43-r1828172+.patch
-Patch43: httpd-2.4.43-sslcoalesce.patch
-Patch44: httpd-2.4.46-lua-resume.patch
 Patch45: httpd-2.4.43-logjournal.patch
 
 # ulimit to apachectl
@@ -100,8 +101,7 @@ Patch56: httpd-2.4.39-modremoteip-ssl.patch
 # Bug fixes
 # https://bugzilla.redhat.com/show_bug.cgi?id=1397243
 Patch60: httpd-2.4.43-enable-sslv3.patch
-Patch61: httpd-2.4.46-r1878890.patch
-Patch62: httpd-2.4.43-r1870095+.patch
+Patch61: httpd-2.4.48-r1878890.patch
 Patch63: httpd-2.4.46-htcacheclean-dont-break.patch
 
 # Security fixes
@@ -259,8 +259,6 @@ mv apr-util-%{apuver} srclib/apr-util
 %patch40 -p1 -b .r1861269
 %patch41 -p1 -b .r1861793+
 %patch42 -p1 -b .r1828172+
-%patch43 -p1 -b .sslcoalesce
-%patch44 -p1 -b .luaresume
 %patch45 -p1 -b .logjournal
 
 %patch50 -p1 -b .apct2
@@ -272,7 +270,6 @@ mv apr-util-%{apuver} srclib/apr-util
 
 %patch60 -p1 -b .enable-sslv3
 %patch61 -p1 -b .r1878890
-%patch62 -p1 -b .r1870095
 %patch63 -p1 -b .htcacheclean-dont-break
 
 # Patch in the vendor string
@@ -822,6 +819,10 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %changelog
+* Wed Jun 02 2021 Luboš Uhliarik <luhliari@redhat.com> - 2.4.48-1
+- new version 2.4.48
+- Resolves: #1964746 - httpd-2.4.48 is available
+
 * Fri May 21 2021 Alexander Ursu <alexander.ursu@gmail.com> - 2.4.46-14
 - added rpaf patches for remoteip module
 
