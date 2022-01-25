@@ -96,7 +96,7 @@ Patch52: httpd-2.4.27-apr.patch
 Patch53: httpd-2.4.41-sem.patch
 # mod_rpaf
 Patch55: httpd-2.4.39-modremoteip-rpaf.patch
-Patch56: httpd-2.4.39-modremoteip-ssl.patch
+Patch56: httpd-2.4.52-modremoteip-ssl-tls.patch
 
 # Bug fixes
 # https://bugzilla.redhat.com/show_bug.cgi?id=1397243

@@ -1,0 +1,24 @@
+diff -rup httpd-2.4.52.orig/modules/ssl/ssl_engine_vars.c httpd-2.4.52/modules/ssl/ssl_engine_vars.c
+--- httpd-2.4.52.orig/modules/ssl/ssl_engine_vars.c	2021-09-09 15:22:23.000000000 +0000
++++ httpd-2.4.52/modules/ssl/ssl_engine_vars.c	2022-01-16 21:14:59.434703000 +0000
+@@ -68,7 +68,7 @@ static SSLConnRec *ssl_get_effective_con
+ static int ssl_conn_is_ssl(conn_rec *c)
+ {
+     const SSLConnRec *sslconn = ssl_get_effective_config(c);
+-    return (sslconn && sslconn->ssl)? OK : DECLINED;
++    return ((sslconn && sslconn->ssl) || apr_table_get(c->notes, "remoteip-https") != NULL)? OK : DECLINED;
+ }
+ 
+ static const char var_interface[] = "mod_ssl/" AP_SERVER_BASEREVISION;
+diff -rup httpd-2.4.52.orig/modules/tls/tls_core.c httpd-2.4.52/modules/tls/tls_core.c
+--- httpd-2.4.52.orig/modules/tls/tls_core.c	2021-11-30 16:29:20.000000000 +0000
++++ httpd-2.4.52/modules/tls/tls_core.c	2022-01-16 21:05:06.605693000 +0000
+@@ -55,7 +55,7 @@ void tls_conf_conn_set(conn_rec *c, tls_
+ int tls_conn_check_ssl(conn_rec *c)
+ {
+     tls_conf_conn_t *cc = tls_conf_conn_get(c->master? c->master : c);
+-    if (TLS_CONN_ST_IS_ENABLED(cc)) {
++    if (TLS_CONN_ST_IS_ENABLED(cc) || apr_table_get(c->notes, "remoteip-https") != NULL) {
+         return OK;
+     }
+     return DECLINED;
