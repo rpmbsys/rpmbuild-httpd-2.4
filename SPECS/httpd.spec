@@ -7,7 +7,7 @@
 %define debug_package %{nil}
 
 %if 0%{?rhel} >= 7
-%define vstring %(source /etc/os-release; echo ${REDHAT_SUPPORT_PRODUCT})
+%define vstring %(source /etc/os-release; echo ${NAME})
 %else
 %define vstring centos
 %endif
@@ -25,7 +25,7 @@
 
 Summary: Apache HTTP Server
 Name: httpd
-Version: 2.4.48
+Version: 2.4.52
 Release: %{rpmrel}%{?dist}
 URL: https://httpd.apache.org/
 Source0: https://www.apache.org/dist/httpd/httpd-%{version}.tar.bz2
@@ -83,7 +83,7 @@ Patch38: httpd-2.4.43-sslciphdefault.patch
 Patch39: httpd-2.4.43-sslprotdefault.patch
 Patch40: httpd-2.4.43-r1861269.patch
 Patch41: httpd-2.4.43-r1861793+.patch
-Patch42: httpd-2.4.43-r1828172+.patch
+Patch42: httpd-2.4.48-r1828172+.patch
 Patch45: httpd-2.4.43-logjournal.patch
 
 # ulimit to apachectl
@@ -103,6 +103,7 @@ Patch56: httpd-2.4.39-modremoteip-ssl.patch
 Patch60: httpd-2.4.43-enable-sslv3.patch
 Patch61: httpd-2.4.48-r1878890.patch
 Patch63: httpd-2.4.46-htcacheclean-dont-break.patch
+Patch65: httpd-2.4.51-r1894152.patch
 
 # Security fixes
 
@@ -271,6 +272,7 @@ mv apr-util-%{apuver} srclib/apr-util
 %patch60 -p1 -b .enable-sslv3
 %patch61 -p1 -b .r1878890
 %patch63 -p1 -b .htcacheclean-dont-break
+%patch65 -p1 -b .r1894152
 
 # Patch in the vendor string
 sed -i '/^#define PLATFORM/s/Unix/%{vstring}/' os/unix/os.h
@@ -548,6 +550,12 @@ rm -rf $RPM_BUILD_ROOT%{docroot}/html/*.html \
 ln -s ../../pixmaps/poweredby.png \
         $RPM_BUILD_ROOT%{contentdir}/icons/poweredby.png
 
+# Symlink for the system logo
+%if 0%{?rhel} >= 9
+ln -s ../../pixmaps/system-noindex-logo.png \
+        $RPM_BUILD_ROOT%{contentdir}/icons/system_noindex_logo.png
+%endif
+
 # symlinks for /etc/httpd
 rmdir $RPM_BUILD_ROOT/etc/httpd/{state,run}
 ln -s ../..%{_localstatedir}/log/httpd $RPM_BUILD_ROOT/etc/httpd/logs
@@ -819,6 +827,17 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %changelog
+* Wed Dec 22 2021 Joe Orton <jorton@redhat.com> - 2.4.52-1
+- update to 2.4.52
+
+* Mon Dec 06 2021 Neal Gompa <ngompa@fedoraproject.org> - 2.4.51-3
+- Use NAME from os-release(5) for vendor string
+  Related: #2029071 - httpd on CentOS identifies as RHEL
+
+* Tue Oct 12 2021 Joe Orton <jorton@redhat.com> - 2.4.51-2
+- mod_ssl: updated patch for OpenSSL 3.0 compatibility (#2007178)
+- mod_deflate/core: add two brigade handling correctness fixes
+
 * Wed Jun 02 2021 Luboš Uhliarik <luhliari@redhat.com> - 2.4.48-1
 - new version 2.4.48
 - Resolves: #1964746 - httpd-2.4.48 is available
