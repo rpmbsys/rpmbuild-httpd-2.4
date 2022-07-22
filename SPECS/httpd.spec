@@ -21,11 +21,22 @@
 
 # https://github.com/rpm-software-management/rpm/blob/master/doc/manual/conditionalbuilds
 
-%global rpmrel 1
+%global rpmrel 3
+
+%if 0%{?fedora} > 35 || 0%{?rhel} > 9
+%bcond_without pcre2
+%bcond_with pcre
+%else
+%bcond_with pcre2
+%bcond_without pcre
+%endif
+
+# Similar issue to https://bugzilla.redhat.com/show_bug.cgi?id=2043092
+%undefine _package_note_flags
 
 Summary: Apache HTTP Server
 Name: httpd
-Version: 2.4.52
+Version: 2.4.54
 Release: %{rpmrel}%{?dist}
 URL: https://httpd.apache.org/
 Source0: https://www.apache.org/dist/httpd/httpd-%{version}.tar.bz2
@@ -68,15 +79,15 @@ Patch6: httpd-2.4.34-apctlsystemd.patch
 # CentOS 6
 Patch18: httpd-2.4.25-httpd-libs.patch
 # Needed for socket activation and mod_systemd patch
-Patch19: httpd-2.4.43-detect-systemd.patch
+Patch19: httpd-2.4.53-detect-systemd.patch
 # Features/functional changes
 Patch21: httpd-2.4.48-r1842929+.patch
 Patch22: httpd-2.4.43-mod_systemd.patch
-Patch23: httpd-2.4.48-export.patch
+Patch23: httpd-2.4.53-export.patch
 Patch24: httpd-2.4.43-corelimit.patch
-Patch25: httpd-2.4.43-selinux.patch
+Patch25: httpd-2.4.54-selinux.patch
 Patch26: httpd-2.4.43-gettid.patch
-Patch27: httpd-2.4.43-icons.patch
+Patch27: httpd-2.4.54-icons.patch
 Patch30: httpd-2.4.43-cachehardmax.patch
 Patch34: httpd-2.4.43-socket-activation.patch
 Patch38: httpd-2.4.43-sslciphdefault.patch
@@ -85,6 +96,7 @@ Patch40: httpd-2.4.43-r1861269.patch
 Patch41: httpd-2.4.43-r1861793+.patch
 Patch42: httpd-2.4.48-r1828172+.patch
 Patch45: httpd-2.4.43-logjournal.patch
+Patch46: httpd-2.4.53-separate-systemd-fns.patch
 
 # ulimit to apachectl
 Patch50: httpd-2.4.27-apct2.patch
@@ -112,7 +124,12 @@ Group: System Environment/Daemons
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 BuildRequires: autoconf, perl, perl-generators, pkgconfig, findutils, xmlto
 BuildRequires: zlib-devel, libselinux-devel
-BuildRequires: pcre-devel >= 5.0
+%if %{with pcre2}
+BuildRequires: pcre2-devel
+%endif
+%if %{with pcre}
+BuildRequires: pcre-devel > 5.0
+%endif
 BuildRequires: gcc
 
 %if 0%{?rhel} >= 7
@@ -166,7 +183,7 @@ for XML, LDAP, database interfaces, URI parsing and more.
 %package devel
 Group: Development/Libraries
 Summary: Development interfaces for the Apache HTTP Server
-Requires: pkgconfig
+Requires: pkgconfig, libtool
 Requires: httpd = %{version}-%{release}
 Requires: httpd-apr = %{version}-%{release}
 Requires: httpd-apr-util = %{version}-%{release}
@@ -261,6 +278,7 @@ mv apr-util-%{apuver} srclib/apr-util
 %patch41 -p1 -b .r1861793+
 %patch42 -p1 -b .r1828172+
 %patch45 -p1 -b .logjournal
+%patch46 -p1 -b .separatesystemd
 
 %patch50 -p1 -b .apct2
 %patch51 -p1 -b .static
@@ -310,6 +328,7 @@ xmlto man %{SOURCE47}
 
 : Building with MMN %{mmn}, MMN-ISA %{mmnisa}
 : Default MPM is %{mpm}, vendor string is '%{vstring}'
+: Regex Engine: PCRE=%{with pcre} PCRE2=%{with pcre2}
 
 %build
 # reconfigure to enable wired minds module
@@ -350,7 +369,12 @@ export LYNX_PATH=/usr/bin/links
     --enable-layout=Fedora \
     --with-installbuilddir=%{_libdir}/httpd/build \
     --enable-mpms-shared=all \
-    --with-pcre \
+%if %{with pcre2}
+    --with-pcre2=%{_bindir}/pcre2-config \
+%endif
+%if %{with pcre}
+    --with-pcre=%{_bindir}/pcre-config \
+%endif
     --enable-pie \
     --with-included-apr \
     --enable-modules=none \
@@ -620,9 +644,12 @@ sed -i '/instdso/s,top_srcdir,top_builddir,' \
 cp -p $RPM_BUILD_ROOT%{_libdir}/httpd/build/config_vars.mk \
       $RPM_BUILD_ROOT%{_libdir}/httpd/build/vendor_config_vars.mk
 
-# Sanitize CFLAGS in standard config_vars.mk
-sed '/^CFLAGS/s,=.*$,= -O2 -g -Wall,' \
+# Sanitize CFLAGS & LIBTOOL in standard config_vars.mk
+sed -e '/^CFLAGS/s,=.*$,= -O2 -g -Wall,' \
+    -e '/^LIBTOOL/s,/.*/libtool,%{_bindir}/libtool,' \
     -i $RPM_BUILD_ROOT%{_libdir}/httpd/build/config_vars.mk
+diff -u $RPM_BUILD_ROOT%{_libdir}/httpd/build/vendor_config_vars.mk \
+    $RPM_BUILD_ROOT%{_libdir}/httpd/build/config_vars.mk || true
 
 sed 's/config_vars.mk/vendor_config_vars.mk/' \
     $RPM_BUILD_ROOT%{_bindir}/apxs \
@@ -827,6 +854,18 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %changelog
+* Fri Jun 17 2022 Joe Orton <jorton@redhat.com> - 2.4.54-3
+- update PCRE config selection
+
+* Thu Jun 09 2022 Luboš Uhliarik <luhliari@redhat.com> - 2.4.54-2
+- new version 2.4.54
+
+* Mon May 16 2022 Joe Orton <jorton@redhat.com> - 2.4.53-7
+- disable package notes
+
+* Wed Apr 20 2022 Joe Orton <jorton@redhat.com> - 2.4.53-4
+- switch to PCRE2 for new releases
+
 * Wed Dec 22 2021 Joe Orton <jorton@redhat.com> - 2.4.52-1
 - update to 2.4.52
 
